@@ -1,0 +1,493 @@
+﻿<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover" />
+    <meta name="theme-color" content="#0C1222" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="format-detection" content="telephone=no" />
+    <title>مشرق Mashriq — منصة الإبداع والتسويق للطلاب</title>
+    <meta name="description" content="مشرق — منصة شروق جديد لعرض وبيع منتجات وخدمات الطلاب. ابدأ رحلة نجاحك معنا!" />
+    <!-- Bootstrap 5 RTL -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" rel="stylesheet" />
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <!-- Custom Styles (Override Bootstrap) -->
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <!-- PRELOADER -->
+    <div class="preloader" id="preloader">
+      <div class="preloader-content">
+        <div class="preloader-logo">
+          <i class="fas fa-sun"></i>
+        </div>
+        <div class="preloader-text">مشرق</div>
+        <div class="preloader-bar"></div>
+      </div>
+    </div>
+
+    <!-- SCROLL PROGRESS -->
+    <div class="scroll-progress" id="scrollProgress"></div>
+
+    <!-- PARTICLES BACKGROUND -->
+    <div class="particles">
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+    </div>
+
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+      <div class="container">
+        <a class="navbar-brand d-flex align-items-center gap-2" href="index.html">
+          <img src="logo.png" alt="مشرق" class="logo-img" />
+          <span class="brand-text">مشرق</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain" aria-controls="navbarMain" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarMain">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+              <a class="nav-link active" aria-current="page" href="index.html">الرئيسية</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="products.html">المنتجات</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="about.html">عن المنصة</a>
+            </li>
+          </ul>
+          <div class="d-flex gap-2" id="authButtons">
+            <!-- Will be filled by JS based on login state -->
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- HERO -->
+    <header class="container hero" id="hero">
+      <div class="hero-content">
+        <span class="chip animate-fade-in">
+          <i class="fas fa-sun"></i>
+          شروق جديد لإبداعك ✨
+        </span>
+        <h2 class="animate-slide-up">
+          منصة
+          <span class="gradient-text">مشرق</span>
+          — ابدأ رحلة النجاح!
+        </h2>
+        <p class="animate-fade-in delay-1">
+          من أول رفع صور ووصف وسعر — لحد الشراء والتقييم — كل ده في تجربة بسيطة
+          وسريعة تناسب الطالب والمشتري.
+        </p>
+        <div class="hero-cta animate-fade-in delay-2">
+          <a class="btn primary pulse" href="register.html">
+            <i class="fas fa-rocket"></i>
+            ابدأ البيع الآن
+          </a>
+          <a class="btn glass" href="#features">
+            <i class="fas fa-eye"></i>
+            اكتشف المميزات
+          </a>
+        </div>
+        <div class="hero-stats animate-fade-in delay-3">
+          <div class="stat">
+            <span class="stat-number" data-target="150">0</span>+
+            <span class="stat-label">طالب مسجل</span>
+          </div>
+          <div class="stat">
+            <span class="stat-number" data-target="320">0</span>+
+            <span class="stat-label">منتج معروض</span>
+          </div>
+          <div class="stat">
+            <span class="stat-number" data-target="500">0</span>+
+            <span class="stat-label">عملية بيع</span>
+          </div>
+        </div>
+      </div>
+      <figure class="hero-image animate-fade-in delay-1">
+        <div class="image-wrapper">
+          <img
+            src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=900&h=600&fit=crop"
+            alt="طلاب يعملون على مشروع"
+            loading="lazy"
+          />
+          <div class="image-overlay"></div>
+        </div>
+        <div class="floating-card card-1">
+          <i class="fas fa-code"></i>
+          <span>برمجة</span>
+        </div>
+        <div class="floating-card card-2">
+          <i class="fas fa-palette"></i>
+          <span>تصميم</span>
+        </div>
+        <div class="floating-card card-3">
+          <i class="fas fa-paint-brush"></i>
+          <span>فنون</span>
+        </div>
+      </figure>
+    </header>
+
+    <!-- FEATURES -->
+    <section id="features" class="container section">
+      <div class="section-header">
+        <span class="kicker">
+          <i class="fas fa-star"></i>
+          المميزات
+        </span>
+        <h3>ليه مشرق؟</h3>
+        <p class="section-desc">منصة متكاملة صُممت لعرض وبيع إبداعات الطلاب</p>
+      </div>
+      <div class="grid cols-3">
+        <article class="card feature-card" data-aos="fade-up">
+          <div class="card-icon gradient-1">
+            <i class="fas fa-mobile-alt"></i>
+          </div>
+          <h4>واجهة سهلة</h4>
+          <p>تجربة خفيفة وبسيطة للرفع والتصفح والشراء تعمل على جميع الأجهزة.</p>
+          <span class="tag">سهولة الاستخدام</span>
+        </article>
+        <article class="card feature-card" data-aos="fade-up" data-aos-delay="100">
+          <div class="card-icon gradient-2">
+            <i class="fas fa-star"></i>
+          </div>
+          <h4>تقييم موثوق</h4>
+          <p>نظام مراجعات يساعد الموهبة تثبت نفسها وتبني سمعة قوية.</p>
+          <span class="tag">ثقة</span>
+        </article>
+        <article class="card feature-card" data-aos="fade-up" data-aos-delay="200">
+          <div class="card-icon gradient-3">
+            <i class="fas fa-credit-card"></i>
+          </div>
+          <h4>طرق دفع مرنة</h4>
+          <p>دفع داخلي أو إلكتروني — حسب سياسات المدرسة والتفضيلات.</p>
+          <span class="tag">مرونة</span>
+        </article>
+        <article class="card feature-card" data-aos="fade-up" data-aos-delay="300">
+          <div class="card-icon gradient-4">
+            <i class="fas fa-th-large"></i>
+          </div>
+          <h4>فئات متنوعة</h4>
+          <p>برمجة، تصميم، فنون، أشغال يدوية، خدمات تعليمية، وأكثر.</p>
+          <span class="tag">تنوع</span>
+        </article>
+        <article class="card feature-card" data-aos="fade-up" data-aos-delay="400">
+          <div class="card-icon gradient-5">
+            <i class="fas fa-lightbulb"></i>
+          </div>
+          <h4>تعزيز ريادة الأعمال</h4>
+          <p>الطلاب يتعلموا التسعير، التسويق، وخدمة العملاء بشكل عملي.</p>
+          <span class="tag">ريادة</span>
+        </article>
+        <article class="card feature-card" data-aos="fade-up" data-aos-delay="500">
+          <div class="card-icon gradient-6">
+            <i class="fas fa-users"></i>
+          </div>
+          <h4>مجتمع داعم</h4>
+          <p>مساحة تشارك وتعاون بين الطلاب والمشترين والمعلمين.</p>
+          <span class="tag">مجتمع</span>
+        </article>
+      </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section id="how" class="container section">
+      <div class="section-header">
+        <span class="kicker">
+          <i class="fas fa-route"></i>
+          كيف يعمل
+        </span>
+        <h3>4 خطوات بسيطة</h3>
+        <p class="section-desc">رحلتك من الفكرة للبيع في دقائق معدودة</p>
+      </div>
+      <div class="steps-timeline">
+        <div class="step-item">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <div class="step-icon">
+              <i class="fas fa-user-plus"></i>
+            </div>
+            <h4>سجل حسابك</h4>
+            <p>إنشاء حساب طالب خلال أقل من دقيقة باستخدام بريدك الإلكتروني.</p>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <div class="step-icon">
+              <i class="fas fa-upload"></i>
+            </div>
+            <h4>ارفع منتجك / خدمتك</h4>
+            <p>صور عالية الجودة + وصف واضح + سعر مناسب = منتج جذاب.</p>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-number">3</div>
+          <div class="step-content">
+            <div class="step-icon">
+              <i class="fas fa-shopping-cart"></i>
+            </div>
+            <h4>المشتري يتصفح ويشتري</h4>
+            <p>بحث حسب الفئات مع سلة شراء سهلة وعملية دفع آمنة.</p>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-number">4</div>
+          <div class="step-content">
+            <div class="step-icon">
+              <i class="fas fa-star"></i>
+            </div>
+            <h4>تقييم وتغذية راجعة</h4>
+            <p>ارفع مستواك من خلال آراء العملاء واستفد من التجربة.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- LATEST PRODUCTS -->
+    <section id="latestProducts" class="container section">
+      <div class="section-header">
+        <span class="kicker">
+          <i class="fas fa-fire"></i>
+          أحدث المنتجات
+        </span>
+        <h3>منتجات مميزة من مبدعينا</h3>
+        <p class="section-desc">اكتشف أحدث الإبداعات من مجتمع مشرق</p>
+      </div>
+      <div class="products-grid" id="latestProductsGrid">
+        <!-- Products will be loaded by JS -->
+      </div>
+      <div class="section-footer">
+        <a href="products.html" class="btn primary">
+          <i class="fas fa-th-large"></i>
+          عرض جميع المنتجات
+        </a>
+      </div>
+    </section>
+
+    <!-- CATEGORIES -->
+    <section id="categories" class="container section">
+      <div class="section-header">
+        <span class="kicker">
+          <i class="fas fa-layer-group"></i>
+          الفئات
+        </span>
+        <h3>استكشف حسب التخصص</h3>
+      </div>
+      <div class="categories-grid">
+        <a href="products.html?category=programming" class="category-card">
+          <div class="category-icon gradient-1">
+            <i class="fas fa-code"></i>
+          </div>
+          <h4>برمجة وتطوير</h4>
+          <p>مواقع، تطبيقات، أنظمة</p>
+        </a>
+        <a href="products.html?category=design" class="category-card">
+          <div class="category-icon gradient-2">
+            <i class="fas fa-palette"></i>
+          </div>
+          <h4>تصميم جرافيك</h4>
+          <p>شعارات، بوسترات، هويات</p>
+        </a>
+        <a href="products.html?category=art" class="category-card">
+          <div class="category-icon gradient-3">
+            <i class="fas fa-paint-brush"></i>
+          </div>
+          <h4>فنون ورسم</h4>
+          <p>لوحات، رسوم، فن رقمي</p>
+        </a>
+        <a href="products.html?category=crafts" class="category-card">
+          <div class="category-icon gradient-4">
+            <i class="fas fa-hand-sparkles"></i>
+          </div>
+          <h4>أشغال يدوية</h4>
+          <p>حرف، مجوهرات، ديكور</p>
+        </a>
+        <a href="products.html?category=education" class="category-card">
+          <div class="category-icon gradient-5">
+            <i class="fas fa-book"></i>
+          </div>
+          <h4>خدمات تعليمية</h4>
+          <p>دروس، شروحات، ملخصات</p>
+        </a>
+        <a href="products.html?category=other" class="category-card">
+          <div class="category-icon gradient-6">
+            <i class="fas fa-ellipsis-h"></i>
+          </div>
+          <h4>خدمات أخرى</h4>
+          <p>مونتاج، كتابة، ترجمة</p>
+        </a>
+      </div>
+    </section>
+
+    <!-- TESTIMONIALS -->
+    <section id="testimonials" class="container section">
+      <div class="section-header">
+        <span class="kicker">
+          <i class="fas fa-quote-right"></i>
+          آراء المستخدمين
+        </span>
+        <h3>ماذا يقول طلابنا؟</h3>
+      </div>
+      <div class="testimonials-slider">
+        <div class="testimonial-card">
+          <div class="testimonial-content">
+            <p>"المنصة ساعدتني أبيع تصميماتي وأكسب من مهاراتي وأنا لسه طالب. تجربة رائعة!"</p>
+          </div>
+          <div class="testimonial-author">
+            <div class="author-avatar gradient-1">أ</div>
+            <div class="author-info">
+              <h5>أحمد محمد</h5>
+              <span>طالب - قسم التصميم</span>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-card">
+          <div class="testimonial-content">
+            <p>"اشتريت موقع من طالب هنا وكان شغل احترافي جداً. أنصح الكل يجرب!"</p>
+          </div>
+          <div class="testimonial-author">
+            <div class="author-avatar gradient-2">س</div>
+            <div class="author-info">
+              <h5>سارة أحمد</h5>
+              <span>مشتري - صاحبة مشروع</span>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-card">
+          <div class="testimonial-content">
+            <p>"بفضل مشرق اتعلمت إزاي أسوق لنفسي وأتعامل مع العملاء. خبرة لا تُقدر بثمن!"</p>
+          </div>
+          <div class="testimonial-author">
+            <div class="author-avatar gradient-3">م</div>
+            <div class="author-info">
+              <h5>محمد علي</h5>
+              <span>طالب - قسم البرمجة</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section id="join" class="container section cta-section">
+      <div class="cta-content">
+        <div class="cta-text">
+          <h4>جاهز تبدأ رحلتك؟</h4>
+          <p>
+            انضم لمجتمع مشرق النهاردة وابدأ في عرض موهبتك للعالم.
+            سجل مجاناً في دقيقة واحدة!
+          </p>
+          <div class="hero-cta">
+            <a class="btn primary glow" href="register.html">
+              <i class="fas fa-user-plus"></i>
+              إنشاء حساب مجاني
+            </a>
+            <a class="btn glass" href="products.html">
+              <i class="fas fa-sparkles"></i>
+              تصفح المنتجات
+            </a>
+          </div>
+        </div>
+        <div class="cta-stats">
+          <div class="cta-stat-item">
+            <i class="fas fa-check-circle"></i>
+            <span>تسجيل مجاني تماماً</span>
+          </div>
+          <div class="cta-stat-item">
+            <i class="fas fa-check-circle"></i>
+            <span>دعم فني متواصل</span>
+          </div>
+          <div class="cta-stat-item">
+            <i class="fas fa-check-circle"></i>
+            <span>بيئة آمنة للطلاب</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+      <div class="container">
+        <div class="footer-grid">
+          <div class="footer-brand">
+            <a class="brand" href="index.html">
+              <img src="logo.png" alt="مشرق" class="logo-img small" />
+              <h3>مشرق</h3>
+            </a>
+            <p>منصة الإبداع والتسويق للطلاب. نربط بين الموهبة والفرصة.</p>
+            <div class="social-links">
+              <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
+              <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+              <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+              <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
+            </div>
+          </div>
+          <div class="footer-links">
+            <h4>روابط سريعة</h4>
+            <ul>
+              <li><a href="index.html">الرئيسية</a></li>
+              <li><a href="products.html">المنتجات</a></li>
+              <li><a href="about.html">عن المنصة</a></li>
+              <li><a href="register.html">إنشاء حساب</a></li>
+            </ul>
+          </div>
+          <div class="footer-links">
+            <h4>الفئات</h4>
+            <ul>
+              <li><a href="products.html?category=programming">برمجة وتطوير</a></li>
+              <li><a href="products.html?category=design">تصميم جرافيك</a></li>
+              <li><a href="products.html?category=art">فنون ورسم</a></li>
+              <li><a href="products.html?category=crafts">أشغال يدوية</a></li>
+            </ul>
+          </div>
+          <div class="footer-contact">
+            <h4>تواصل معنا</h4>
+            <ul>
+              <li>
+                <i class="fas fa-envelope"></i>
+                <span>info@mashriq.com</span>
+              </li>
+              <li>
+                <i class="fas fa-phone"></i>
+                <span>+20 123 456 7890</span>
+              </li>
+              <li>
+                <i class="fas fa-map-marker-alt"></i>
+                <span>WE School - مصر</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <p>© <span id="year"></span> مشرق Mashriq — جميع الحقوق محفوظة</p>
+          <p>صُنع بـ ❤️ بواسطة Peter Youssef</p>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom Scripts -->
+    <script src="app.js"></script>
+    <script src="api.js"></script>
+  </body>
+</html>
+
+
+

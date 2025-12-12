@@ -1,0 +1,346 @@
+﻿<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#0a0f1c" />
+    <title>لوحة التحكم | مشرق</title>
+    <meta name="description" content="لوحة تحكم الطالب في مشرق - إدارة المنتجات والمبيعات" />
+    <!-- Bootstrap 5 RTL -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" rel="stylesheet" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="dashboard.css" />
+  </head>
+  <body>
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+      <div class="container">
+        <a class="navbar-brand d-flex align-items-center gap-2" href="index.html">
+          <img src="logo.png" alt="مشرق" class="logo-img" />
+          <span class="brand-text">مشرق</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain" aria-controls="navbarMain" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarMain">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+              <a class="nav-link" href="index.html">الرئيسية</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="products.html">المنتجات</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link active" aria-current="page" href="dashboard.html">لوحة التحكم</a>
+            </li>
+          </ul>
+          <div class="d-flex gap-2" id="authButtons">
+            <!-- Filled by JS -->
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <main class="dashboard-page">
+      <div class="container">
+        <!-- Welcome Header -->
+        <div class="dashboard-header">
+          <div class="welcome-text">
+            <h2>مرحباً، <span id="userName">الطالب</span>! 👋</h2>
+            <p>إليك نظرة عامة على نشاطك في مشرق</p>
+          </div>
+          <a href="add-product.html" class="btn primary">
+            <i class="fas fa-plus"></i>
+            إضافة منتج جديد
+          </a>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon gradient-1">
+              <i class="fas fa-box"></i>
+            </div>
+            <div class="stat-info">
+              <span class="stat-number" id="productsCount">0</span>
+              <span class="stat-label">منتجاتي</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon gradient-2">
+              <i class="fas fa-shopping-cart"></i>
+            </div>
+            <div class="stat-info">
+              <span class="stat-number" id="salesCount">0</span>
+              <span class="stat-label">عمليات البيع</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon gradient-3">
+              <i class="fas fa-coins"></i>
+            </div>
+            <div class="stat-info">
+              <span class="stat-number" id="totalEarnings">0</span>
+              <span class="stat-label">إجمالي الأرباح</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon gradient-4">
+              <i class="fas fa-star"></i>
+            </div>
+            <div class="stat-info">
+              <span class="stat-number" id="avgRating">0.0</span>
+              <span class="stat-label">متوسط التقييم</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dashboard Content -->
+        <div class="dashboard-content">
+          <!-- My Products Section -->
+          <section class="dashboard-section">
+            <div class="section-header-inline">
+              <h3>
+                <i class="fas fa-box-open"></i>
+                منتجاتي
+              </h3>
+              <a href="add-product.html" class="btn sm primary">
+                <i class="fas fa-plus"></i>
+                إضافة
+              </a>
+            </div>
+            
+            <div class="my-products-grid" id="myProductsGrid">
+              <!-- Products will be loaded by JS -->
+            </div>
+          </section>
+
+          <!-- Quick Actions -->
+          <section class="dashboard-section">
+            <h3>
+              <i class="fas fa-bolt"></i>
+              إجراءات سريعة
+            </h3>
+            <div class="quick-actions-grid">
+              <a href="add-product.html" class="quick-action-card">
+                <div class="action-icon gradient-1">
+                  <i class="fas fa-plus"></i>
+                </div>
+                <span>إضافة منتج</span>
+              </a>
+              <a href="products.html" class="quick-action-card">
+                <div class="action-icon gradient-2">
+                  <i class="fas fa-sparkles"></i>
+                </div>
+                <span>تصفح المنتجات</span>
+              </a>
+              <a href="profile.html" class="quick-action-card">
+                <div class="action-icon gradient-3">
+                  <i class="fas fa-user-edit"></i>
+                </div>
+                <span>تعديل الملف</span>
+              </a>
+              <button class="quick-action-card" onclick="UserManager.logout()">
+                <div class="action-icon gradient-4">
+                  <i class="fas fa-sign-out-alt"></i>
+                </div>
+                <span>تسجيل الخروج</span>
+              </button>
+            </div>
+          </section>
+
+          <!-- Tips Section -->
+          <section class="dashboard-section tips-section">
+            <h3>
+              <i class="fas fa-lightbulb"></i>
+              نصائح للنجاح
+            </h3>
+            <div class="tips-grid">
+              <div class="tip-card">
+                <div class="tip-icon">📸</div>
+                <h4>صور عالية الجودة</h4>
+                <p>استخدم صور واضحة وجذابة لمنتجاتك</p>
+              </div>
+              <div class="tip-card">
+                <div class="tip-icon">📝</div>
+                <h4>وصف مفصل</h4>
+                <p>اكتب وصفاً شاملاً يوضح مميزات منتجك</p>
+              </div>
+              <div class="tip-card">
+                <div class="tip-icon">💰</div>
+                <h4>تسعير مناسب</h4>
+                <p>حدد سعراً عادلاً يناسب السوق</p>
+              </div>
+              <div class="tip-card">
+                <div class="tip-icon">⚡</div>
+                <h4>سرعة الرد</h4>
+                <p>تواصل سريع مع المشترين يزيد المبيعات</p>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+      <div class="container">
+        <div class="footer-bottom">
+          <p>© <span id="year"></span> مشرق — جميع الحقوق محفوظة</p>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal" id="deleteModal">
+      <div class="modal-content">
+        <div class="modal-icon danger">
+          <i class="fas fa-trash-alt"></i>
+        </div>
+        <h3>حذف المنتج</h3>
+        <p>هل أنت متأكد من حذف هذا المنتج؟ لا يمكن التراجع عن هذا الإجراء.</p>
+        <div class="modal-actions">
+          <button class="btn glass" onclick="closeModal()">إلغاء</button>
+          <button class="btn danger" id="confirmDeleteBtn">حذف</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+      // Check if user is logged in
+      if (!UserManager.isLoggedIn()) {
+        window.location.href = 'login.html';
+      }
+
+      // Set year
+      document.getElementById('year').textContent = new Date().getFullYear();
+
+      // Update auth buttons
+      UI.updateAuthButtons();
+
+      // Load user data
+      function loadUserData() {
+        const user = UserManager.getCurrentUser();
+        if (!user) return;
+
+        // Update welcome text
+        document.getElementById('userName').textContent = user.name.split(' ')[0];
+
+        // Get user's products
+        const allProducts = ProductManager.getAllProducts();
+        const myProducts = allProducts.filter(p => p.sellerId === user.id);
+
+        // Update stats
+        document.getElementById('productsCount').textContent = myProducts.length;
+        document.getElementById('salesCount').textContent = user.sales || 0;
+        document.getElementById('totalEarnings').textContent = (user.sales || 0) * 100 + ' جنيه';
+        
+        // Calculate average rating
+        const ratings = myProducts.filter(p => p.rating > 0).map(p => p.rating);
+        const avgRating = ratings.length > 0 
+          ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1)
+          : '0.0';
+        document.getElementById('avgRating').textContent = avgRating;
+
+        // Render products
+        renderMyProducts(myProducts);
+      }
+
+      // Render my products
+      function renderMyProducts(products) {
+        const grid = document.getElementById('myProductsGrid');
+        
+        if (products.length === 0) {
+          grid.innerHTML = `
+            <div class="empty-state">
+              <i class="fas fa-box-open"></i>
+              <p>لم تضف أي منتجات بعد</p>
+              <a href="add-product.html" class="btn primary">
+                <i class="fas fa-plus"></i>
+                أضف منتجك الأول
+              </a>
+            </div>
+          `;
+          return;
+        }
+
+        grid.innerHTML = products.map(product => `
+          <div class="my-product-card" data-id="${product.id}">
+            <div class="product-image">
+              <img src="${product.image}" alt="${product.title}" onerror="this.src='https://via.placeholder.com/400x300?text=صورة+المنتج'">
+              <span class="product-category-badge">
+                <i class="${UI.getCategoryIcon(product.category)}"></i>
+              </span>
+            </div>
+            <div class="product-details">
+              <h4>${product.title}</h4>
+              <div class="product-meta">
+                <span class="price">${product.price} جنيه</span>
+                <span class="rating">
+                  <i class="fas fa-star"></i>
+                  ${product.rating.toFixed(1)}
+                </span>
+              </div>
+            </div>
+            <div class="product-actions">
+              <button class="action-btn edit" onclick="editProduct(${product.id})" title="تعديل">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button class="action-btn delete" onclick="confirmDelete(${product.id})" title="حذف">
+                <i class="fas fa-trash-alt"></i>
+              </button>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      // Delete confirmation
+      let productToDelete = null;
+
+      function confirmDelete(productId) {
+        productToDelete = productId;
+        document.getElementById('deleteModal').classList.add('show');
+      }
+
+      function closeModal() {
+        document.getElementById('deleteModal').classList.remove('show');
+        productToDelete = null;
+      }
+
+      document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+        if (productToDelete) {
+          ProductManager.deleteProduct(productToDelete);
+          UI.showToast('تم حذف المنتج بنجاح', 'success');
+          closeModal();
+          loadUserData();
+        }
+      });
+
+      // Edit product
+      function editProduct(productId) {
+        window.location.href = `add-product.html?edit=${productId}`;
+      }
+
+      // Close modal on outside click
+      document.getElementById('deleteModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+          closeModal();
+        }
+      });
+
+      // Initialize
+      loadUserData();
+    </script>
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>
+
+
+

@@ -1,0 +1,52 @@
+{
+  "users": [
+    {
+      "id": "user_demo_student",
+      "name": "طالب تجريبي",
+      "username": "demo_student",
+      "email": "student@demo.com",
+      "password": "$2a$10$demohashedpassword123456789student",
+      "phone": "01000000001",
+      "grade": "grade11",
+      "specialization": "programming",
+      "avatar": "ط",
+      "createdAt": 1702400000000,
+      "products": [],
+      "sales": 0,
+      "rating": 5,
+      "isDemo": true
+    },
+    {
+      "id": "user_demo_seller",
+      "name": "بائع تجريبي",
+      "username": "demo_seller",
+      "email": "seller@demo.com",
+      "password": "$2a$10$demohashedpassword123456789seller",
+      "phone": "01000000002",
+      "grade": "grade12",
+      "specialization": "design",
+      "avatar": "ب",
+      "createdAt": 1702400000000,
+      "products": [],
+      "sales": 15,
+      "rating": 4.8,
+      "isDemo": true
+    },
+    {
+      "id": "user_b5242cbf-def3-4b2d-8022-938f932c09fd",
+      "name": "بيتر  يوسف ",
+      "username": "peter1",
+      "email": "selle@demo.com",
+      "password": "$2a$10$EkVUjwCAj7TZK72cMbCIGO6f19lsTOc2WkuokOPV8ZI7jNTOWfuvy",
+      "phone": "011346775411",
+      "grade": "grade10",
+      "specialization": "design",
+      "avatar": "ب",
+      "createdAt": 1765559756386,
+      "products": [],
+      "sales": 0,
+      "rating": 5,
+      "isDemo": false
+    }
+  ]
+}

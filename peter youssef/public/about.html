@@ -1,0 +1,275 @@
+﻿<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#0a0f1c" />
+    <title>عن المنصة | مشرق</title>
+    <meta name="description" content="تعرف على رؤية ورسالة مشرق" />
+    <!-- Bootstrap 5 RTL -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" rel="stylesheet" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="stylesheet" href="style.css" />
+    <style>
+      .about-page {
+        padding: 100px 0 60px;
+        min-height: 100vh;
+      }
+      
+      .about-header {
+        text-align: center;
+        max-width: 800px;
+        margin: 0 auto 60px;
+      }
+      
+      .about-header h2 {
+        font-size: 40px;
+        font-weight: 800;
+        margin: 16px 0 20px;
+      }
+      
+      .about-header p {
+        font-size: 18px;
+        color: var(--text-secondary);
+        line-height: 1.8;
+      }
+      
+      .story-section {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 60px;
+        align-items: center;
+        margin-bottom: 80px;
+      }
+      
+      .story-content h3 {
+        font-size: 30px;
+        margin-bottom: 20px;
+      }
+      
+      .story-content p {
+        color: var(--text-secondary);
+        font-size: 16px;
+        line-height: 1.8;
+        margin-bottom: 20px;
+      }
+      
+      .story-image {
+        position: relative;
+        border-radius: var(--radius-xl);
+        overflow: hidden;
+        box-shadow: var(--shadow-lg);
+        border: 1px solid var(--border-color);
+      }
+      
+      .values-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 30px;
+        margin-bottom: 80px;
+      }
+      
+      .value-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        padding: 30px;
+        border-radius: var(--radius-lg);
+        text-align: center;
+        transition: var(--transition-normal);
+      }
+      
+      .value-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--brand-primary);
+      }
+      
+      .value-icon {
+        width: 60px;
+        height: 60px;
+        margin: 0 auto 20px;
+        background: rgba(34, 211, 238, 0.1);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        color: var(--brand-primary);
+      }
+      
+      .team-section {
+        text-align: center;
+      }
+      
+      .team-grid {
+        display: flex;
+        justify-content: center;
+        gap: 30px;
+        margin-top: 40px;
+      }
+      
+      .team-member {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        padding: 30px;
+        width: 300px;
+      }
+      
+      .member-avatar {
+        width: 100px;
+        height: 100px;
+        margin: 0 auto 20px;
+        border-radius: 50%;
+        overflow: hidden;
+        border: 3px solid var(--brand-primary);
+      }
+      
+      @media (max-width: 900px) {
+        .story-section {
+          grid-template-columns: 1fr;
+        }
+        
+        .values-grid {
+          grid-template-columns: 1fr;
+        }
+        
+        .team-grid {
+          flex-direction: column;
+          align-items: center;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+      <div class="container">
+        <a class="navbar-brand d-flex align-items-center gap-2" href="index.html">
+          <img src="logo.png" alt="مشرق" class="logo-img" />
+          <span class="brand-text">مشرق</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain" aria-controls="navbarMain" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarMain">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+              <a class="nav-link" href="index.html">الرئيسية</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="products.html">المنتجات</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link active" aria-current="page" href="about.html">عن المنصة</a>
+            </li>
+          </ul>
+          <div class="d-flex gap-2" id="authButtons"></div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <main class="about-page">
+      <div class="container">
+        
+        <div class="about-header">
+          <span class="chip">من نحن</span>
+          <h2>منصة طلابية صنعت من أجل الطلاب</h2>
+          <p>
+            مشرق هي أول منصة متكاملة مخصصة لطلاب مدارس WE للتكنولوجيا التطبيقية،
+            تهدف لدعم المواهب الشابة وتمكينهم من دخول سوق العمل مبكراً.
+          </p>
+        </div>
+        
+        <div class="story-section">
+          <div class="story-image">
+            <img src="https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=800&h=600&fit=crop" alt="قصتنا" />
+          </div>
+          <div class="story-content">
+            <h3>كيف بدأت الفكرة؟</h3>
+            <p>
+              بدأت الفكرة من ملاحظة بسيطة: هناك الكثير من الطلاب الموهوبين في مدارسنا يمتلكون مهارات رائعة في البرمجة والتصميم والفنون، لكنهم لا يجدون مكاناً آمناً ومخصصاً لعرض أعمالهم.
+            </p>
+            <p>
+              قررنا إنشاء مشرق ليكون هذا المكان. منصة تجمع بين البساطة في الاستخدام والاحترافية في العرض، لتكون الجسر الذي يربط بين إبداع الطالب واحتياجات السوق.
+            </p>
+            <div class="hero-stats" style="margin-top: 0; padding-top: 0; border: 0;">
+              <div class="stat" style="text-align: right;">
+                <span class="stat-number">2023</span>
+                <span class="stat-label">سنة التأسيس</span>
+              </div>
+              <div class="stat" style="text-align: right;">
+                <span class="stat-number">WE</span>
+                <span class="stat-label">المدرسة</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="values-grid">
+          <div class="value-card">
+            <div class="value-icon">
+              <i class="fas fa-rocket"></i>
+            </div>
+            <h4>دعم الابتكار</h4>
+            <p>نشجع الأفكار الجديدة والمشاريع الإبداعية ونوفر لها البيئة المناسبة للنمو.</p>
+          </div>
+          <div class="value-card">
+            <div class="value-icon">
+              <i class="fas fa-shield-alt"></i>
+            </div>
+            <h4>الأمان والموثوقية</h4>
+            <p>نضمن بيئة تواصل آمنة بين الطلاب والمشترين داخل مجتمع المدرسة.</p>
+          </div>
+          <div class="value-card">
+            <div class="value-icon">
+              <i class="fas fa-hands-helping"></i>
+            </div>
+            <h4>روح المجتمع</h4>
+            <p>نؤمن بقوة التعاون وتبادل الخبرات بين الطلاب لبناء مجتمع ناجح.</p>
+          </div>
+        </div>
+        
+        <div class="team-section">
+          <h3>فريق العمل</h3>
+          <p style="color: var(--text-secondary); margin-bottom: 30px;">الطلاب القائمون على تطوير المنصة</p>
+          
+          <div class="team-grid">
+            <div class="team-member">
+              <div class="member-avatar">
+                <img src="https://ui-avatars.com/api/?name=Peter+Youssef&background=22d3ee&color=fff" alt="Peter Youssef" />
+              </div>
+              <h4>Peter Youssef</h4>
+              <p style="color: var(--brand-primary); font-size: 14px; margin-bottom: 10px;">Full Stack Developer</p>
+              <p style="font-size: 14px; color: var(--text-secondary);">مطور ومصمم المنصة، طالب في مدرسة WE.</p>
+            </div>
+          </div>
+        </div>
+        
+      </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+      <div class="container">
+        <div class="footer-bottom">
+          <p>© <span id="year"></span> مشرق — جميع الحقوق محفوظة</p>
+        </div>
+      </div>
+    </footer>
+
+    <script src="app.js"></script>
+    <script>
+      document.getElementById('year').textContent = new Date().getFullYear();
+      UI.updateAuthButtons();
+    </script>
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>
+
+
+
