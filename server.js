@@ -6,13 +6,13 @@
    ======================================== */
 
 // 1. Load env vars BEFORE anything else
-const dotenvResult = require('dotenv').config();
-
-// DEBUG: Diagnose environment loading
-if (dotenvResult.error) {
-    console.error('❌ Dotenv Error:', dotenvResult.error);
-} else {
-    console.log('🔍 Dotenv Parsed Keys:', Object.keys(dotenvResult.parsed || {}));
+if (process.env.NODE_ENV !== 'production') {
+    const dotenvResult = require('dotenv').config();
+    if (dotenvResult.error) {
+        console.log('ℹ️  Note: No .env file found (using system environment variables)');
+    } else {
+        console.log('✅ Local .env file loaded successfully');
+    }
 }
 
 const express = require('express');
