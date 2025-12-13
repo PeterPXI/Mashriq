@@ -280,163 +280,186 @@
     </main>
 
     <script src="app.js"></script>
+    <script src="api.js"></script>
     <script>
-      // Check if user is logged in
-      if (!UserManager.isLoggedIn()) {
-        window.location.href = 'login.html';
-      }
-
-      // Update auth buttons
-      UI.updateAuthButtons();
-
-      // Check if editing
-      const urlParams = new URLSearchParams(window.location.search);
-      const editId = urlParams.get('edit');
-      let isEditing = false;
-      let currentProduct = null;
-
-      if (editId) {
-        isEditing = true;
-        currentProduct = ProductManager.getProductById(parseInt(editId));
-        
-        if (currentProduct) {
-          // Update page for edit mode
-          document.getElementById('pageChip').innerHTML = '<i class="fas fa-edit"></i> تعديل المنتج';
-          document.getElementById('pageTitle').textContent = 'تعديل المنتج';
-          document.getElementById('submitText').textContent = 'حفظ التعديلات';
-          
-          // Fill form
-          document.getElementById('title').value = currentProduct.title;
-          document.getElementById('description').value = currentProduct.description;
-          document.getElementById('category').value = currentProduct.category;
-          document.getElementById('price').value = currentProduct.price;
-          document.getElementById('imageUrl').value = currentProduct.image;
-          
-          // Show image preview
-          if (currentProduct.image) {
-            document.getElementById('previewImg').src = currentProduct.image;
-            document.getElementById('imagePreview').style.display = 'block';
-            document.getElementById('imageUploadArea').style.display = 'none';
-          }
-        } else {
-          UI.showToast('المنتج غير موجود', 'error');
-          window.location.href = 'dashboard.html';
-        }
-      }
-
-      // Image upload handling
-      const imageUploadArea = document.getElementById('imageUploadArea');
-      const imageInput = document.getElementById('imageInput');
-      const imagePreview = document.getElementById('imagePreview');
-      const previewImg = document.getElementById('previewImg');
-      const imageUrlInput = document.getElementById('imageUrl');
-
-      imageUploadArea.addEventListener('click', () => imageInput.click());
-
-      imageUploadArea.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        imageUploadArea.classList.add('dragover');
-      });
-
-      imageUploadArea.addEventListener('dragleave', () => {
-        imageUploadArea.classList.remove('dragover');
-      });
-
-      imageUploadArea.addEventListener('drop', (e) => {
-        e.preventDefault();
-        imageUploadArea.classList.remove('dragover');
-        const file = e.dataTransfer.files[0];
-        if (file) handleImageFile(file);
-      });
-
-      imageInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) handleImageFile(file);
-      });
-
-      function handleImageFile(file) {
-        if (!file.type.startsWith('image/')) {
-          UI.showToast('يرجى اختيار ملف صورة صحيح', 'error');
+      // Initialize async logic
+      (async function init() {
+        // Check if user is logged in (using local token check for speed)
+        if (!UserManager.isLoggedIn()) {
+          window.location.href = 'login.html';
           return;
         }
 
-        // Limit size to 2MB to avoid filling LocalStorage too quickly
-        if (file.size > 2 * 1024 * 1024) {
-          UI.showToast('حجم الصورة كبير جداً. يرجى اختيار صورة أقل من 2MB', 'error');
-          return;
-        }
+        // Update auth buttons
+        UI.updateAuthButtons();
 
-        const reader = new FileReader();
+        // Check if editing
+        const urlParams = new URLSearchParams(window.location.search);
+        const editId = urlParams.get('edit');
+        let isEditing = false;
+        let currentProduct = null;
 
-        reader.onload = function(e) {
-          const base64Image = e.target.result;
-          
-          // Show preview
-          previewImg.src = base64Image;
-          
-          // Store the Base64 string in the hidden input
-          imageUrlInput.value = base64Image;
-          
-          // Update UI state
-          imagePreview.style.display = 'block';
-          imageUploadArea.style.display = 'none';
-          
-          UI.showToast('تم تحميل الصورة بنجاح', 'success');
-        };
-
-        reader.onerror = function() {
-           UI.showToast('حدث خطأ أثناء قراءة الملف', 'error');
-        };
-
-        reader.readAsDataURL(file);
-      }
-
-      function removeImage() {
-        previewImg.src = '';
-        imageUrlInput.value = '';
-        imagePreview.style.display = 'none';
-        imageUploadArea.style.display = 'block';
-        imageInput.value = '';
-      }
-
-      // Form submission
-      document.getElementById('productForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-
-        const imageUrl = imageUrlInput.value || 'https://via.placeholder.com/600x400?text=صورة+المنتج';
-
-        const productData = {
-          title: document.getElementById('title').value.trim(),
-          description: document.getElementById('description').value.trim(),
-          category: document.getElementById('category').value,
-          price: parseInt(document.getElementById('price').value),
-          image: imageUrl
-        };
-
-        if (isEditing && currentProduct) {
-          // Update existing product
-          const result = ProductManager.updateProduct(currentProduct.id, productData);
-          if (result.success) {
-            UI.showToast('تم تحديث المنتج بنجاح! 🎉', 'success');
-            setTimeout(() => {
-              window.location.href = 'dashboard.html';
-            }, 1500);
-          } else {
-            UI.showToast(result.message, 'error');
-          }
-        } else {
-          // Add new product
-          const result = ProductManager.addProduct(productData);
-          if (result.success) {
-            UI.showToast('تم إضافة المنتج بنجاح! 🎉', 'success');
-            setTimeout(() => {
-              window.location.href = 'dashboard.html';
-            }, 1500);
-          } else {
-            UI.showToast(result.message, 'error');
+        if (editId) {
+          try {
+            // Fetch product data from API
+            currentProduct = await ProductManagerAPI.getProductById(editId);
+            
+            if (currentProduct) {
+              isEditing = true;
+              // Update page for edit mode
+              document.getElementById('pageChip').innerHTML = '<i class="fas fa-edit"></i> تعديل المنتج';
+              document.getElementById('pageTitle').textContent = 'تعديل المنتج';
+              document.getElementById('submitText').textContent = 'حفظ التعديلات';
+              
+              // Fill form
+              document.getElementById('title').value = currentProduct.title;
+              document.getElementById('description').value = currentProduct.description;
+              document.getElementById('category').value = currentProduct.category;
+              document.getElementById('price').value = currentProduct.price;
+              
+              // Handle Image
+              if (currentProduct.image) {
+                document.getElementById('imageUrl').value = currentProduct.image;
+                document.getElementById('previewImg').src = currentProduct.image;
+                document.getElementById('imagePreview').style.display = 'block';
+                document.getElementById('imageUploadArea').style.display = 'none';
+              }
+            } else {
+              UI.showToast('المنتج غير موجود', 'error');
+              setTimeout(() => window.location.href = 'dashboard.html', 1500);
+            }
+          } catch (error) {
+            console.error(error);
+            UI.showToast('حدث خطأ أثناء تحميل المنتج', 'error');
           }
         }
-      });
+
+        // Image upload handling
+        const imageUploadArea = document.getElementById('imageUploadArea');
+        const imageInput = document.getElementById('imageInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const previewImg = document.getElementById('previewImg');
+        const imageUrlInput = document.getElementById('imageUrl');
+
+        imageUploadArea.addEventListener('click', () => imageInput.click());
+
+        imageUploadArea.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          imageUploadArea.classList.add('dragover');
+        });
+
+        imageUploadArea.addEventListener('dragleave', () => {
+          imageUploadArea.classList.remove('dragover');
+        });
+
+        imageUploadArea.addEventListener('drop', (e) => {
+          e.preventDefault();
+          imageUploadArea.classList.remove('dragover');
+          const file = e.dataTransfer.files[0];
+          if (file) handleImageFile(file);
+        });
+
+        imageInput.addEventListener('change', (e) => {
+          const file = e.target.files[0];
+          if (file) handleImageFile(file);
+        });
+
+        window.handleImageFile = function(file) {
+          if (!file.type.startsWith('image/')) {
+            UI.showToast('يرجى اختيار ملف صورة صحيح', 'error');
+            return;
+          }
+
+          if (file.size > 2 * 1024 * 1024) {
+            UI.showToast('حجم الصورة كبير جداً. يرجى اختيار صورة أقل من 2MB', 'error');
+            return;
+          }
+
+          const reader = new FileReader();
+
+          reader.onload = function(e) {
+            const base64Image = e.target.result;
+            previewImg.src = base64Image;
+            imageUrlInput.value = base64Image;
+            imagePreview.style.display = 'block';
+            imageUploadArea.style.display = 'none';
+            UI.showToast('تم تحميل الصورة بنجاح', 'success');
+          };
+
+          reader.onerror = function() {
+            UI.showToast('حدث خطأ أثناء قراءة الملف', 'error');
+          };
+
+          reader.readAsDataURL(file);
+        };
+
+        window.removeImage = function() {
+          previewImg.src = '';
+          imageUrlInput.value = '';
+          imagePreview.style.display = 'none';
+          imageUploadArea.style.display = 'block';
+          imageInput.value = '';
+        };
+
+        // Form submission
+        document.getElementById('productForm').addEventListener('submit', async function(e) {
+          e.preventDefault();
+          
+          const title = document.getElementById('title').value.trim();
+          const price = document.getElementById('price').value;
+          const description = document.getElementById('description').value.trim();
+          const category = document.getElementById('category').value;
+          const imageUrl = imageUrlInput.value || 'https://via.placeholder.com/600x400?text=منتج+بدون+صورة';
+
+          // Basic validation
+          if (!title || !price || !description || !category) {
+             UI.showToast('يرجى ملء جميع الحقول المطلوبة', 'error');
+             return;
+          }
+
+          const productData = {
+            title,
+            description,
+            category,
+            price: parseInt(price),
+            image: imageUrl
+          };
+
+          const submitBtn = document.getElementById('submitBtn');
+          const originalBtnText = submitBtn.innerHTML;
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
+
+          try {
+            let result;
+            
+            if (isEditing && currentProduct) {
+              // Update existing product via API
+              result = await ProductManagerAPI.updateProduct(currentProduct.id, productData);
+            } else {
+              // Add new product via API
+              result = await ProductManagerAPI.addProduct(productData);
+            }
+
+            if (result.success) {
+              const msg = isEditing ? 'تم تحديث المنتج بنجاح! 🎉' : 'تم إضافة المنتج بنجاح! 🎉';
+              UI.showToast(msg, 'success');
+              setTimeout(() => {
+                window.location.href = 'dashboard.html';
+              }, 1500);
+            } else {
+              UI.showToast(result.message || 'حدث خطأ أثناء الحفظ', 'error');
+              submitBtn.disabled = false;
+              submitBtn.innerHTML = originalBtnText;
+            }
+          } catch (error) {
+            console.error(error);
+            UI.showToast('حدث خطأ غير متوقع', 'error');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnText;
+          }
+        });
+      })();
     </script>
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
