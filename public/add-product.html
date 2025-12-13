@@ -331,15 +331,6 @@
       const previewImg = document.getElementById('previewImg');
       const imageUrlInput = document.getElementById('imageUrl');
 
-      // Sample images for demo
-      const sampleImages = [
-        'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=600&h=400&fit=crop',
-        'https://images.unsplash.com/photo-1558655146-9f40138edfeb?w=600&h=400&fit=crop',
-        'https://images.unsplash.com/photo-1572044162444-ad60f128bdea?w=600&h=400&fit=crop',
-        'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&h=400&fit=crop',
-        'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&h=400&fit=crop'
-      ];
-
       imageUploadArea.addEventListener('click', () => imageInput.click());
 
       imageUploadArea.addEventListener('dragover', (e) => {
@@ -369,22 +360,35 @@
           return;
         }
 
-        if (file.size > 5 * 1024 * 1024) {
-          UI.showToast('حجم الصورة يتجاوز 5MB', 'error');
+        // Limit size to 2MB to avoid filling LocalStorage too quickly
+        if (file.size > 2 * 1024 * 1024) {
+          UI.showToast('حجم الصورة كبير جداً. يرجى اختيار صورة أقل من 2MB', 'error');
           return;
         }
 
-        // For demo purposes, use a random sample image
-        const randomImage = sampleImages[Math.floor(Math.random() * sampleImages.length)];
-        
-        // In a real app, you would upload to a server
-        // For now, we use the sample image
-        previewImg.src = randomImage;
-        imageUrlInput.value = randomImage;
-        imagePreview.style.display = 'block';
-        imageUploadArea.style.display = 'none';
-        
-        UI.showToast('تم تحميل الصورة بنجاح', 'success');
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+          const base64Image = e.target.result;
+          
+          // Show preview
+          previewImg.src = base64Image;
+          
+          // Store the Base64 string in the hidden input
+          imageUrlInput.value = base64Image;
+          
+          // Update UI state
+          imagePreview.style.display = 'block';
+          imageUploadArea.style.display = 'none';
+          
+          UI.showToast('تم تحميل الصورة بنجاح', 'success');
+        };
+
+        reader.onerror = function() {
+           UI.showToast('حدث خطأ أثناء قراءة الملف', 'error');
+        };
+
+        reader.readAsDataURL(file);
       }
 
       function removeImage() {
