@@ -492,7 +492,7 @@
       // Fetch Real Stats from API
       document.addEventListener('DOMContentLoaded', async () => {
         try {
-          const stats = await API.stats.get();
+          const stats = await API.stats.getPlatform();
           if (stats) {
              const statElements = document.querySelectorAll('.stat-number');
              // Assuming order: Students, Products, Sales. 
