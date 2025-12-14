@@ -261,12 +261,7 @@ const UserManager = {
 
 // ============ PRODUCT MANAGEMENT ============
 const ProductManager = {
-  initializeProducts() {
-    const existingProducts = Storage.get(CONFIG.storageKeys.products);
-    if (!existingProducts || existingProducts.length === 0) {
-      Storage.set(CONFIG.storageKeys.products, SAMPLE_PRODUCTS);
-    }
-  },
+  
   
   getAllProducts() {
     return Storage.get(CONFIG.storageKeys.products) || SAMPLE_PRODUCTS;
@@ -501,7 +496,7 @@ const UI = {
   
   createProductCard(product) {
     return `
-      <article class="product-card" data-id="${product.id}">
+      <article class="product-card" data-id="${product._id || product.id}">
         <div class="product-image">
           <img src="${product.image}" alt="${product.title}" loading="lazy" onerror="this.src='https://via.placeholder.com/600x400?text=صورة+المنتج'">
           <span class="product-category-badge">
