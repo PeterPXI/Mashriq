@@ -491,32 +491,15 @@
     <script>
       // Fetch Real Stats from API
       document.addEventListener('DOMContentLoaded', async () => {
-        // Explicitly load products (backup call in case app.js timing issue)
-        if (typeof loadLatestProducts === 'function') {
-          loadLatestProducts();
-        }
-        
         try {
           const stats = await API.stats.getPlatform();
           if (stats) {
              const statElements = document.querySelectorAll('.stat-number');
-             // Assuming order: Students, Products, Sales. 
-             // Or safer: add IDs to the stats in HTML. 
-             // Current HTML:
-             // 1. Students (150)
-             // 2. Products (320)
-             // 3. Sales (500)
-             
              if (statElements[0]) statElements[0].dataset.target = stats.users || 0;
              if (statElements[1]) statElements[1].dataset.target = stats.products || 0;
              if (statElements[2]) statElements[2].dataset.target = stats.sales || 0;
              
-             // Re-trigger animation if app.js already started it with old values
-             // But actually, if we update dataset.target before intersection observer sees it, it might work?
-             // Since app.js uses IntersectionObserver, if we are fast enough, it's fine.
-             // If not, we can manually update textContent.
              if (typeof animateCounters === 'function') {
-                // Reset text content to 0 to restart animation effect
                 statElements.forEach(el => el.textContent = '0');
                 animateCounters(); 
              }

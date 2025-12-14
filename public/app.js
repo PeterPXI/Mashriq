@@ -709,9 +709,6 @@ function initSmoothScroll() {
 
 // ============ INITIALIZE APP ============
 document.addEventListener('DOMContentLoaded', () => {
-  // Note: ProductManager.initializeProducts() was removed.
-  // Products are now fetched exclusively from the backend API.
-  
   // Update auth buttons based on login state
   UI.updateAuthButtons();
   
@@ -721,11 +718,17 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initialize mobile menu
   initMobileMenu();
   
-  // Animate counters on home page
-  animateCounters();
+  // Homepage-only logic
+  const path = window.location.pathname;
+  const isHomepage = path === '/' || path.endsWith('index.html') || path.endsWith('/');
   
-  // Load latest products on home page
-  loadLatestProducts();
+  if (isHomepage) {
+    // Animate counters on home page
+    animateCounters();
+    
+    // Load latest products on home page
+    loadLatestProducts();
+  }
   
   // Set current year
   setCurrentYear();
