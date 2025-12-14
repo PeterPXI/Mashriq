@@ -211,10 +211,11 @@
       </div>
     </div>
 
+    <script src="api.js"></script>
     <script src="app.js"></script>
     <script>
       // Check if user is logged in
-      if (!UserManager.isLoggedIn()) {
+      if (!UserManagerAPI.isLoggedIn()) {
         window.location.href = 'login.html';
       }
 
@@ -225,38 +226,48 @@
       UI.updateAuthButtons();
 
       // Load user data
-      function loadUserData() {
-        const user = UserManager.getCurrentUser();
-        if (!user) return;
+      async function loadUserData() {
+        // Use API to verify token/user state first
+        const userCheck = await UserManagerAPI.getCurrentUser();
+        const user = userCheck || JSON.parse(localStorage.getItem('edumarket_current_user')); // Fallback purely for display name if API slow, but validation happened above
+
+        if (!user) { 
+           window.location.href = 'login.html';
+           return; 
+        }
 
         // Update welcome text
-        document.getElementById('userName').textContent = user.name.split(' ')[0];
+        document.getElementById('userName').textContent = user.name ? user.name.split(' ')[0] : 'الطالب';
 
-        // Get user's products
-        const allProducts = ProductManager.getAllProducts();
-        const myProducts = allProducts.filter(p => p.sellerId === user.id);
+        try {
+            // Get user's products from API
+            const myProducts = await ProductManagerAPI.getMyProducts();
 
-        // Update stats
-        document.getElementById('productsCount').textContent = myProducts.length;
-        document.getElementById('salesCount').textContent = user.sales || 0;
-        document.getElementById('totalEarnings').textContent = (user.sales || 0) * 100 + ' جنيه';
-        
-        // Calculate average rating
-        const ratings = myProducts.filter(p => p.rating > 0).map(p => p.rating);
-        const avgRating = ratings.length > 0 
-          ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1)
-          : '0.0';
-        document.getElementById('avgRating').textContent = avgRating;
+            // Update stats
+            document.getElementById('productsCount').textContent = myProducts.length;
+            document.getElementById('salesCount').textContent = user.sales || 0;
+            document.getElementById('totalEarnings').textContent = (user.sales || 0) * 100 + ' جنيه';
+            
+            // Calculate average rating
+            const ratings = myProducts.filter(p => p.rating > 0).map(p => p.rating);
+            const avgRating = ratings.length > 0 
+            ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1)
+            : '0.0';
+            document.getElementById('avgRating').textContent = avgRating;
 
-        // Render products
-        renderMyProducts(myProducts);
+            // Render products
+            renderMyProducts(myProducts);
+        } catch (error) {
+            console.error("Failed to load dashboard data:", error);
+            UI.showToast('فشل تحميل البيانات', 'error');
+        }
       }
 
       // Render my products
       function renderMyProducts(products) {
         const grid = document.getElementById('myProductsGrid');
         
-        if (products.length === 0) {
+        if (!products || products.length === 0) {
           grid.innerHTML = `
             <div class="empty-state">
               <i class="fas fa-box-open"></i>
@@ -271,7 +282,7 @@
         }
 
         grid.innerHTML = products.map(product => `
-          <div class="my-product-card" data-id="${product.id}">
+          <div class="my-product-card" data-id="${product._id || product.id}">
             <div class="product-image">
               <img src="${product.image}" alt="${product.title}" onerror="this.src='https://via.placeholder.com/400x300?text=صورة+المنتج'">
               <span class="product-category-badge">
@@ -284,15 +295,15 @@
                 <span class="price">${product.price} جنيه</span>
                 <span class="rating">
                   <i class="fas fa-star"></i>
-                  ${product.rating.toFixed(1)}
+                  ${product.rating ? product.rating.toFixed(1) : '0.0'}
                 </span>
               </div>
             </div>
             <div class="product-actions">
-              <button class="action-btn edit" onclick="editProduct(${product.id})" title="تعديل">
+              <button class="action-btn edit" onclick="editProduct('${product._id || product.id}')" title="تعديل">
                 <i class="fas fa-edit"></i>
               </button>
-              <button class="action-btn delete" onclick="confirmDelete(${product.id})" title="حذف">
+              <button class="action-btn delete" onclick="confirmDelete('${product._id || product.id}')" title="حذف">
                 <i class="fas fa-trash-alt"></i>
               </button>
             </div>
@@ -313,12 +324,17 @@
         productToDelete = null;
       }
 
-      document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+      document.getElementById('confirmDeleteBtn').addEventListener('click', async function() {
         if (productToDelete) {
-          ProductManager.deleteProduct(productToDelete);
-          UI.showToast('تم حذف المنتج بنجاح', 'success');
-          closeModal();
-          loadUserData();
+          const result = await ProductManagerAPI.deleteProduct(productToDelete);
+          
+          if (result && result.success) {
+             UI.showToast('تم حذف المنتج بنجاح', 'success');
+             closeModal();
+             loadUserData();
+          } else {
+             UI.showToast('حدث خطأ أثناء الحذف', 'error');
+          }
         }
       });
 
@@ -335,7 +351,7 @@
       });
 
       // Initialize
-      loadUserData();
+      document.addEventListener('DOMContentLoaded', loadUserData);
     </script>
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>

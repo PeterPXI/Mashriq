@@ -233,8 +233,8 @@
       <p>© <span id="year"></span> مشرق — جميع الحقوق محفوظة</p>
     </footer>
 
-    <script src="app.js"></script>
     <script src="api.js"></script>
+    <script src="app.js"></script>
     <script>
       // Set year
       document.getElementById('year').textContent = new Date().getFullYear();
@@ -297,7 +297,7 @@
         strengthText.style.color = color;
       });
 
-      // Form submission - Using API with localStorage fallback
+      // Form submission - Strict API
       document.getElementById('registerForm').addEventListener('submit', async function(e) {
         e.preventDefault();
 
@@ -328,43 +328,21 @@
           // Try API first
           const result = await API.auth.register(userData);
 
-          if (result.success) {
+          if (result && result.success) {
             UI.showToast('تم إنشاء الحساب بنجاح! مرحباً بك 🎉', 'success');
             setTimeout(() => {
               window.location.href = 'dashboard.html';
             }, 1500);
-          } else if (result.offline) {
-            // Fallback to localStorage if server is offline
-            const localResult = UserManager.register(userData);
-            if (localResult.success) {
-              UI.showToast('تم إنشاء الحساب (وضع عدم الاتصال) 🎉', 'success');
-              setTimeout(() => {
-                window.location.href = 'dashboard.html';
-              }, 1500);
-            } else {
-              UI.showToast(localResult.message, 'error');
-              submitBtn.disabled = false;
-              submitBtn.innerHTML = '<i class="fas fa-user-plus"></i> إنشاء الحساب';
-            }
           } else {
-            UI.showToast(result.message, 'error');
+            UI.showToast(result.message || 'فشل إنشاء الحساب', 'error');
             submitBtn.disabled = false;
             submitBtn.innerHTML = '<i class="fas fa-user-plus"></i> إنشاء الحساب';
           }
         } catch (error) {
           console.error('Registration error:', error);
-          // Fallback to localStorage
-          const localResult = UserManager.register(userData);
-          if (localResult.success) {
-            UI.showToast('تم إنشاء الحساب 🎉', 'success');
-            setTimeout(() => {
-              window.location.href = 'dashboard.html';
-            }, 1500);
-          } else {
-            UI.showToast(localResult.message, 'error');
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = '<i class="fas fa-user-plus"></i> إنشاء الحساب';
-          }
+          UI.showToast('حدث خطأ في الاتصال بالخادم', 'error');
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<i class="fas fa-user-plus"></i> إنشاء الحساب';
         }
       });
 

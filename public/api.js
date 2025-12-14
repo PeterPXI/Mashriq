@@ -62,11 +62,6 @@ const API = {
       return data;
     } catch (error) {
       console.error('API Error:', error);
-      // If server is not available, fall back to localStorage
-      if (error.name === 'TypeError' && error.message.includes('fetch')) {
-        console.warn('Server not available, using localStorage fallback');
-        return { success: false, offline: true, message: 'الخادم غير متاح، يتم استخدام التخزين المحلي' };
-      }
       return { success: false, message: 'حدث خطأ في الاتصال بالخادم' };
     }
   },
@@ -234,28 +229,14 @@ const API = {
   }
 };
 
-// Enhanced UserManager that uses both API and localStorage fallback
+// Enhanced UserManager that Strict API usage
 const UserManagerAPI = {
   async register(userData) {
-    const result = await API.auth.register(userData);
-    
-    // If offline, use localStorage fallback
-    if (result.offline) {
-      return UserManager.register(userData);
-    }
-    
-    return result;
+    return await API.auth.register(userData);
   },
   
   async login(email, password) {
-    const result = await API.auth.login(email, password);
-    
-    // If offline, use localStorage fallback
-    if (result.offline) {
-      return UserManager.login(email, password);
-    }
-    
-    return result;
+    return await API.auth.login(email, password);
   },
   
   logout() {
@@ -271,101 +252,48 @@ const UserManagerAPI = {
   },
   
   async updateProfile(userData) {
-    const result = await API.auth.updateProfile(userData);
-    
-    if (result.offline) {
-      return UserManager.updateUser(userData);
-    }
-    
-    return result;
+    return await API.auth.updateProfile(userData);
   }
 };
 
-// Enhanced ProductManager that uses both API and localStorage fallback
+// Enhanced ProductManager Strict API usage
 const ProductManagerAPI = {
   async getAllProducts(filters = {}) {
     const result = await API.products.getAll(filters);
-    
-    if (result.offline) {
-      return ProductManager.getAllProducts();
-    }
-    
     return result.success ? result.products : [];
   },
   
   async getProductById(id) {
     const result = await API.products.getById(id);
-    
-    if (result.offline) {
-      return ProductManager.getProductById(parseInt(id));
-    }
-    
     return result.success ? result.product : null;
   },
   
   async getLatestProducts(limit = 8) {
     const result = await API.products.getLatest(limit);
-    
-    if (result.offline) {
-      return ProductManager.getLatestProducts(limit);
-    }
-    
     return result.success ? result.products : [];
   },
   
   async addProduct(productData) {
-    const result = await API.products.create(productData);
-    
-    if (result.offline) {
-      return ProductManager.addProduct(productData);
-    }
-    
-    return result;
+    return await API.products.create(productData);
   },
   
   async updateProduct(id, productData) {
-    const result = await API.products.update(id, productData);
-    
-    if (result.offline) {
-      return ProductManager.updateProduct(parseInt(id), productData);
-    }
-    
-    return result;
+    return await API.products.update(id, productData);
   },
   
   async deleteProduct(id) {
-    const result = await API.products.delete(id);
-    
-    if (result.offline) {
-      return ProductManager.deleteProduct(parseInt(id));
-    }
-    
-    return result;
+    return await API.products.delete(id);
   },
   
   async searchProducts(query) {
     const result = await API.products.search(query);
-    
-    if (result.offline) {
-      return ProductManager.searchProducts(query);
-    }
-    
     return result.success ? result.products : [];
   },
   
   async getMyProducts() {
     const result = await API.products.getMyProducts();
-    
-    if (result.offline) {
-      const user = UserManager.getCurrentUser();
-      if (user) {
-        return ProductManager.getProductsBySeller(user.id);
-      }
-      return [];
-    }
-    
     return result.success ? result.products : [];
   }
 };
 
-console.log('🔌 EduMarket API Client loaded');
+console.log('🔌 EduMarket API Client loaded (Strict Mode)');

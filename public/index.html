@@ -484,8 +484,43 @@
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Custom Scripts -->
-    <script src="app.js"></script>
+    <!-- Custom Scripts -->
     <script src="api.js"></script>
+    <script src="app.js"></script>
+    
+    <script>
+      // Fetch Real Stats from API
+      document.addEventListener('DOMContentLoaded', async () => {
+        try {
+          const stats = await API.stats.get();
+          if (stats) {
+             const statElements = document.querySelectorAll('.stat-number');
+             // Assuming order: Students, Products, Sales. 
+             // Or safer: add IDs to the stats in HTML. 
+             // Current HTML:
+             // 1. Students (150)
+             // 2. Products (320)
+             // 3. Sales (500)
+             
+             if (statElements[0]) statElements[0].dataset.target = stats.users || 0;
+             if (statElements[1]) statElements[1].dataset.target = stats.products || 0;
+             if (statElements[2]) statElements[2].dataset.target = stats.sales || 0;
+             
+             // Re-trigger animation if app.js already started it with old values
+             // But actually, if we update dataset.target before intersection observer sees it, it might work?
+             // Since app.js uses IntersectionObserver, if we are fast enough, it's fine.
+             // If not, we can manually update textContent.
+             if (typeof animateCounters === 'function') {
+                // Reset text content to 0 to restart animation effect
+                statElements.forEach(el => el.textContent = '0');
+                animateCounters(); 
+             }
+          }
+        } catch (e) {
+          console.error('Failed to fetch stats:', e);
+        }
+      });
+    </script>
   </body>
 </html>
 

@@ -713,13 +713,26 @@ function initMobileMenu() {
 }
 
 // ============ LOAD LATEST PRODUCTS ============
-function loadLatestProducts() {
+// ============ LOAD LATEST PRODUCTS ============
+async function loadLatestProducts() {
   const grid = document.getElementById('latestProductsGrid');
   if (!grid) return;
   
-  const products = ProductManager.getLatestProducts(8);
+  let products = [];
   
-  if (products.length === 0) {
+  try {
+      if (typeof ProductManagerAPI !== 'undefined') {
+          // Use Backend API
+          products = await ProductManagerAPI.getLatestProducts(8);
+      } else {
+          // Fallback to local storage (should typically not happen if api.js is loaded)
+          products = ProductManager.getLatestProducts(8);
+      }
+  } catch (e) {
+      console.error("Error loading latest products:", e);
+  }
+  
+  if (!products || products.length === 0) {
     grid.innerHTML = `
       <div class="empty-state">
         <i class="fas fa-box-open"></i>

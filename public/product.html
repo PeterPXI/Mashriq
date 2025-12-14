@@ -252,6 +252,7 @@
       </div>
     </footer>
 
+    <script src="api.js"></script>
     <script src="app.js"></script>
     <script>
       // Set year
@@ -260,72 +261,86 @@
       // Update auth buttons
       UI.updateAuthButtons();
       
-      // Get product ID
+      // Get product ID (MongoDB IDs are strings)
       const urlParams = new URLSearchParams(window.location.search);
-      const productId = parseInt(urlParams.get('id'));
+      const productId = urlParams.get('id');
       
       let currentProduct = null;
       
       // Load Product
-      function loadProduct() {
+      async function loadProduct() {
         if (!productId) {
           window.location.href = 'products.html';
           return;
         }
         
-        currentProduct = ProductManager.getProductById(productId);
-        
-        if (!currentProduct) {
-          document.querySelector('.container').innerHTML = `
-            <div class="empty-state">
-              <i class="fas fa-exclamation-circle"></i>
-              <p>عذراً، المنتج غير موجود أو تم حذفه.</p>
-              <a href="products.html" class="btn primary">تصفح المنتجات</a>
-            </div>
-          `;
-          return;
+        try {
+            currentProduct = await ProductManagerAPI.getProductById(productId);
+            
+            if (!currentProduct) {
+              document.querySelector('.container').innerHTML = `
+                <div class="empty-state">
+                  <i class="fas fa-exclamation-circle"></i>
+                  <p>عذراً، المنتج غير موجود أو تم حذفه.</p>
+                  <a href="products.html" class="btn primary">تصفح المنتجات</a>
+                </div>
+              `;
+              return;
+            }
+            
+            // Fill Data
+            document.getElementById('productTitle').textContent = currentProduct.title;
+            document.getElementById('productDesc').textContent = currentProduct.description;
+            document.getElementById('productPrice').innerHTML = `${currentProduct.price} <span>جنيه</span>`;
+            document.getElementById('productImage').src = currentProduct.image;
+            document.getElementById('categoryBadge').textContent = UI.getCategoryName(currentProduct.category);
+            document.getElementById('sellerName').textContent = currentProduct.sellerName || 'مستخدم مشرق';
+            document.getElementById('sellerAvatar').textContent = (currentProduct.sellerName || 'U').charAt(0).toUpperCase();
+            document.getElementById('productRating').textContent = currentProduct.rating ? currentProduct.rating.toFixed(1) : '0.0';
+            
+            // Load Related
+            loadRelated(currentProduct.category, currentProduct._id || currentProduct.id);
+
+        } catch (error) {
+            console.error('Error loading product:', error);
+            document.querySelector('.container').innerHTML = `<p class="text-center text-danger">حدث خطأ أثناء تحميل المنتج.</p>`;
         }
-        
-        // Fill Data
-        document.getElementById('productTitle').textContent = currentProduct.title;
-        document.getElementById('productDesc').textContent = currentProduct.description;
-        document.getElementById('productPrice').innerHTML = `${currentProduct.price} <span>جنيه</span>`;
-        document.getElementById('productImage').src = currentProduct.image;
-        document.getElementById('categoryBadge').textContent = UI.getCategoryName(currentProduct.category);
-        document.getElementById('sellerName').textContent = currentProduct.sellerName;
-        document.getElementById('sellerAvatar').textContent = currentProduct.sellerName.charAt(0);
-        document.getElementById('productRating').textContent = currentProduct.rating.toFixed(1);
-        
-        // Load Related
-        loadRelated(currentProduct.category, currentProduct.id);
       }
       
       // Load Related Products
-      function loadRelated(category, excludeId) {
-        const products = ProductManager.getProductsByCategory(category)
-          .filter(p => p.id !== excludeId)
-          .slice(0, 4);
-          
-        const grid = document.getElementById('relatedGrid');
-        
-        if (products.length === 0) {
-          grid.innerHTML = '<p style="color: var(--text-secondary)">لا توجد منتجات مشابهة حالياً.</p>';
-          return;
+      async function loadRelated(category, excludeId) {
+        try {
+            // Fetch all in category (server filtering)
+            const products = await ProductManagerAPI.getAllProducts({ category: category });
+            
+            // Exclude current and limit to 4
+            const related = products
+              .filter(p => (p._id || p.id) !== excludeId)
+              .slice(0, 4);
+              
+            const grid = document.getElementById('relatedGrid');
+            
+            if (related.length === 0) {
+              grid.innerHTML = '<p style="color: var(--text-secondary)">لا توجد منتجات مشابهة حالياً.</p>';
+              return;
+            }
+            
+            grid.innerHTML = related.map(product => UI.createProductCard(product)).join('');
+            
+            // Add click handlers
+            grid.querySelectorAll('.product-card').forEach(card => {
+              card.addEventListener('click', () => {
+                window.location.href = `product.html?id=${card.dataset.id}`;
+              });
+            });
+        } catch (error) {
+            console.error('Error loading related products:', error);
         }
-        
-        grid.innerHTML = products.map(product => UI.createProductCard(product)).join('');
-        
-        // Add click handlers
-        grid.querySelectorAll('.product-card').forEach(card => {
-          card.addEventListener('click', () => {
-            window.location.href = `product.html?id=${card.dataset.id}`;
-          });
-        });
       }
       
       // Add to Cart Logic
       function addToCart() {
-        if (!UserManager.isLoggedIn()) {
+        if (!UserManagerAPI.isLoggedIn()) {
           UI.showToast('يرجى تسجيل الدخول لإضافة منتجات للسلة', 'info');
           setTimeout(() => {
              window.location.href = 'login.html';
@@ -333,6 +348,8 @@
           return;
         }
         
+        // Note: CartManager is still local-only in this version. 
+        // For production consistency we rely on user authentication via API, but cart session is local for now.
         const result = CartManager.addToCart(productId);
         if (result.success) {
           UI.showToast('تمت الإضافة للسلة بنجاح!', 'success');

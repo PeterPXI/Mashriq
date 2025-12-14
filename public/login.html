@@ -146,8 +146,8 @@
       <p>© <span id="year"></span> مشرق — جميع الحقوق محفوظة</p>
     </footer>
 
-    <script src="app.js"></script>
     <script src="api.js"></script>
+    <script src="app.js"></script>
     <script>
       // Set year
       document.getElementById('year').textContent = new Date().getFullYear();
@@ -186,7 +186,7 @@
         UI.showToast('تم ملء بيانات الحساب التجريبي - اضغط تسجيل الدخول', 'info');
       }
 
-      // Form submission - Using API with localStorage fallback
+      // Form submission - Strict API
       document.getElementById('loginForm').addEventListener('submit', async function(e) {
         e.preventDefault();
 
@@ -202,43 +202,21 @@
           // Try API first
           const result = await API.auth.login(email, password);
 
-          if (result.success) {
+          if (result && result.success) {
             UI.showToast('تم تسجيل الدخول بنجاح! مرحباً بك 👋', 'success');
             setTimeout(() => {
               window.location.href = 'dashboard.html';
             }, 1500);
-          } else if (result.offline) {
-            // Fallback to localStorage if server is offline
-            const localResult = UserManager.login(email, password);
-            if (localResult.success) {
-              UI.showToast('تم تسجيل الدخول (وضع عدم الاتصال) 👋', 'success');
-              setTimeout(() => {
-                window.location.href = 'dashboard.html';
-              }, 1500);
-            } else {
-              UI.showToast(localResult.message, 'error');
-              submitBtn.disabled = false;
-              submitBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> تسجيل الدخول';
-            }
           } else {
-            UI.showToast(result.message, 'error');
+            UI.showToast(result.message || 'فشل تسجيل الدخول', 'error');
             submitBtn.disabled = false;
             submitBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> تسجيل الدخول';
           }
         } catch (error) {
           console.error('Login error:', error);
-          // Fallback to localStorage
-          const localResult = UserManager.login(email, password);
-          if (localResult.success) {
-            UI.showToast('تم تسجيل الدخول 👋', 'success');
-            setTimeout(() => {
-              window.location.href = 'dashboard.html';
-            }, 1500);
-          } else {
-            UI.showToast(localResult.message, 'error');
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> تسجيل الدخول';
-          }
+          UI.showToast('حدث خطأ في الاتصال بالخادم', 'error');
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> تسجيل الدخول';
         }
       });
 

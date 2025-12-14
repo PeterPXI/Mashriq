@@ -384,6 +384,7 @@
       </div>
     </footer>
 
+    <script src="api.js"></script>
     <script src="app.js"></script>
     <script>
       // Set year
@@ -413,98 +414,103 @@
       }
       
       // Render products
-      function renderProducts() {
+      async function renderProducts() {
         const grid = document.getElementById('productsGrid');
-        let products = ProductManager.getAllProducts();
         
-        // Filter by category
-        if (currentCategory !== 'all') {
-          products = products.filter(p => p.category === currentCategory);
-        }
-        
-        // Filter by search
-        if (searchQuery) {
-          const query = searchQuery.toLowerCase();
-          products = products.filter(p => 
-            p.title.toLowerCase().includes(query) ||
-            p.description.toLowerCase().includes(query) ||
-            p.sellerName.toLowerCase().includes(query)
-          );
-        }
-        
-        // Filter by price
-        if (currentPriceFilter !== 'all') {
-          const [min, max] = currentPriceFilter.split('-').map(v => v === '+' ? Infinity : parseInt(v) || 0);
-          if (currentPriceFilter.includes('+')) {
-            products = products.filter(p => p.price >= 500);
-          } else {
-            products = products.filter(p => p.price >= min && p.price <= max);
-          }
-        }
-        
-        // Sort
-        switch (currentSort) {
-          case 'newest':
-            products.sort((a, b) => b.createdAt - a.createdAt);
-            break;
-          case 'price-low':
-            products.sort((a, b) => a.price - b.price);
-            break;
-          case 'price-high':
-            products.sort((a, b) => b.price - a.price);
-            break;
-          case 'rating':
-            products.sort((a, b) => b.rating - a.rating);
-            break;
-        }
-        
-        // Update count
-        document.getElementById('resultsCount').textContent = products.length;
-        
-        // Render
-        if (products.length === 0) {
-          grid.innerHTML = `
-            <div class="empty-results" style="grid-column: 1 / -1;">
-              <i class="fas fa-search"></i>
-              <h3>لا توجد نتائج</h3>
-              <p>لم نجد منتجات تطابق بحثك. جرب تغيير الفلاتر.</p>
-              <button class="btn primary" onclick="resetFilters()">
-                <i class="fas fa-redo"></i>
-                إعادة ضبط الفلاتر
-              </button>
-            </div>
-          `;
-          return;
-        }
-        
-        grid.innerHTML = products.map(product => `
-          <article class="product-card" onclick="viewProduct(${product.id})">
-            <div class="product-image">
-              <img src="${product.image}" alt="${product.title}" loading="lazy" onerror="this.src='https://via.placeholder.com/600x400?text=صورة+المنتج'">
-              <span class="product-category-badge">
-                <i class="${UI.getCategoryIcon(product.category)}"></i>
-                ${UI.getCategoryName(product.category)}
-              </span>
-            </div>
-            <div class="product-content">
-              <h3 class="product-title">${product.title}</h3>
-              <div class="product-seller">
-                <i class="fas fa-user-circle"></i>
-                <span>${product.sellerName}</span>
-              </div>
-              <div class="product-footer">
-                <div class="product-price">
-                  ${product.price}
-                  <span>جنيه</span>
+        // Show Loading State (Skeletons) if grid is empty or during new fetches
+        // grid.innerHTML = '...skeletons...'; // Optional, but existing logic kept skeletons until first load
+
+        try {
+            // Build Filters for API
+            // Note: Server supports: category, search, sellerId, limit.
+            // Client side sorting and price filtering might need to be done after fetch if server doesn't support them yet.
+            // For now, let's fetch all (or filtered by category/search) and do refined filtering/sorting on client to match existing UX.
+            
+            const apiFilters = {};
+            if (currentCategory !== 'all') apiFilters.category = currentCategory;
+            if (searchQuery) apiFilters.search = searchQuery;
+            
+            let products = await ProductManagerAPI.getAllProducts(apiFilters);
+            
+            // Client-side Price Filtering (Server doesn't have range filter yet)
+            if (currentPriceFilter !== 'all') {
+              const [min, max] = currentPriceFilter.split('-').map(v => v === '+' ? Infinity : parseInt(v) || 0);
+              if (currentPriceFilter.includes('+')) {
+                products = products.filter(p => p.price >= 500);
+              } else {
+                products = products.filter(p => p.price >= min && p.price <= max);
+              }
+            }
+            
+            // Client-side Sorting
+            switch (currentSort) {
+              case 'newest':
+                products.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                break;
+              case 'price-low':
+                products.sort((a, b) => a.price - b.price);
+                break;
+              case 'price-high':
+                products.sort((a, b) => b.price - a.price);
+                break;
+              case 'rating':
+                // Rating might be 0 if not set
+                products.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+                break;
+            }
+            
+            // Update count
+            document.getElementById('resultsCount').textContent = products.length;
+            
+            // Render
+            if (products.length === 0) {
+              grid.innerHTML = `
+                <div class="empty-results" style="grid-column: 1 / -1;">
+                  <i class="fas fa-search"></i>
+                  <h3>لا توجد نتائج</h3>
+                  <p>لم نجد منتجات تطابق بحثك. جرب تغيير الفلاتر.</p>
+                  <button class="btn primary" onclick="resetFilters()">
+                    <i class="fas fa-redo"></i>
+                    إعادة ضبط الفلاتر
+                  </button>
                 </div>
-                <div class="product-rating">
-                  <i class="fas fa-star"></i>
-                  <span>${product.rating.toFixed(1)}</span>
+              `;
+              return;
+            }
+            
+            grid.innerHTML = products.map(product => `
+              <article class="product-card" onclick="viewProduct('${product._id || product.id}')">
+                <div class="product-image">
+                  <img src="${product.image}" alt="${product.title}" loading="lazy" onerror="this.src='https://via.placeholder.com/600x400?text=صورة+المنتج'">
+                  <span class="product-category-badge">
+                    <i class="${UI.getCategoryIcon(product.category)}"></i>
+                    ${UI.getCategoryName(product.category)}
+                  </span>
                 </div>
-              </div>
-            </div>
-          </article>
-        `).join('');
+                <div class="product-content">
+                  <h3 class="product-title">${product.title}</h3>
+                  <div class="product-seller">
+                    <i class="fas fa-user-circle"></i>
+                    <span>${product.sellerName || 'مستخدم مشرق'}</span>
+                  </div>
+                  <div class="product-footer">
+                    <div class="product-price">
+                      ${product.price}
+                      <span>جنيه</span>
+                    </div>
+                    <div class="product-rating">
+                      <i class="fas fa-star"></i>
+                      <span>${product.rating ? product.rating.toFixed(1) : '0.0'}</span>
+                    </div>
+                  </div>
+                </div>
+              </article>
+            `).join('');
+
+        } catch (error) {
+            console.error('Failed to load products:', error);
+            grid.innerHTML = `<p class="text-center text-danger">حدث خطأ أثناء تحميل المنتجات. يرجى المحاولة لاحقاً.</p>`;
+        }
       }
       
       // View product
@@ -534,6 +540,7 @@
       // Event listeners
       document.getElementById('searchInput').addEventListener('input', function(e) {
         searchQuery = e.target.value;
+        // Simple debounce could be added here
         renderProducts();
       });
       
