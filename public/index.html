@@ -491,6 +491,11 @@
     <script>
       // Fetch Real Stats from API
       document.addEventListener('DOMContentLoaded', async () => {
+        // Explicitly load products (backup call in case app.js timing issue)
+        if (typeof loadLatestProducts === 'function') {
+          loadLatestProducts();
+        }
+        
         try {
           const stats = await API.stats.getPlatform();
           if (stats) {
