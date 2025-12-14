@@ -267,10 +267,19 @@
       
       let currentProduct = null;
       
-      // Load Product
+      // Load Product from API
       async function loadProduct() {
-        if (!productId) {
-          window.location.href = 'products.html';
+        // Validate that productId exists and looks like a MongoDB ObjectId
+        // MongoDB ObjectIds are 24-character hex strings
+        if (!productId || productId.length < 12) {
+          console.error('Invalid product ID:', productId);
+          document.querySelector('.container').innerHTML = `
+            <div class="empty-state">
+              <i class="fas fa-exclamation-circle"></i>
+              <p>معرّف المنتج غير صالح.</p>
+              <a href="products.html" class="btn primary">تصفح المنتجات</a>
+            </div>
+          `;
           return;
         }
         
@@ -298,8 +307,8 @@
             document.getElementById('sellerAvatar').textContent = (currentProduct.sellerName || 'U').charAt(0).toUpperCase();
             document.getElementById('productRating').textContent = currentProduct.rating ? currentProduct.rating.toFixed(1) : '0.0';
             
-            // Load Related
-            loadRelated(currentProduct.category, currentProduct._id || currentProduct.id);
+            // Load Related - use only _id (MongoDB ObjectId)
+            loadRelated(currentProduct.category, currentProduct._id);
 
         } catch (error) {
             console.error('Error loading product:', error);
@@ -313,9 +322,9 @@
             // Fetch all in category (server filtering)
             const products = await ProductManagerAPI.getAllProducts({ category: category });
             
-            // Exclude current and limit to 4
+            // Exclude current, filter valid _ids, and limit to 4
             const related = products
-              .filter(p => (p._id || p.id) !== excludeId)
+              .filter(p => p._id && p._id !== excludeId)
               .slice(0, 4);
               
             const grid = document.getElementById('relatedGrid');
@@ -327,10 +336,13 @@
             
             grid.innerHTML = related.map(product => UI.createProductCard(product)).join('');
             
-            // Add click handlers
+            // Add click handlers - only navigate if valid _id
             grid.querySelectorAll('.product-card').forEach(card => {
               card.addEventListener('click', () => {
-                window.location.href = `product.html?id=${card.dataset.id}`;
+                const id = card.dataset.id;
+                if (id && id.length >= 12) {
+                  window.location.href = `product.html?id=${id}`;
+                }
               });
             });
         } catch (error) {

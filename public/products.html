@@ -478,8 +478,22 @@
               return;
             }
             
-            grid.innerHTML = products.map(product => `
-              <article class="product-card" onclick="viewProduct('${product._id || product.id}')">
+            // Filter only products with valid MongoDB _id
+            const validProducts = products.filter(p => p._id && typeof p._id === 'string' && p._id.length >= 12);
+            
+            if (validProducts.length === 0) {
+              grid.innerHTML = `
+                <div class="empty-results" style="grid-column: 1 / -1;">
+                  <i class="fas fa-database"></i>
+                  <h3>لا توجد منتجات صالحة</h3>
+                  <p>جميع المنتجات المتاحة تفتقر لمعرّف صحيح.</p>
+                </div>
+              `;
+              return;
+            }
+            
+            grid.innerHTML = validProducts.map(product => `
+              <article class="product-card" data-product-id="${product._id}" onclick="viewProduct('${product._id}')">
                 <div class="product-image">
                   <img src="${product.image}" alt="${product.title}" loading="lazy" onerror="this.src='https://via.placeholder.com/600x400?text=صورة+المنتج'">
                   <span class="product-category-badge">

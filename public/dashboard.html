@@ -281,8 +281,14 @@
           return;
         }
 
-        grid.innerHTML = products.map(product => `
-          <div class="my-product-card" data-id="${product._id || product.id}">
+        grid.innerHTML = products.map(product => {
+          // Skip products without valid MongoDB _id
+          if (!product._id || typeof product._id !== 'string') {
+            console.warn('Skipping product without valid _id:', product.title);
+            return '';
+          }
+          return `
+          <div class="my-product-card" data-id="${product._id}">
             <div class="product-image">
               <img src="${product.image}" alt="${product.title}" onerror="this.src='https://via.placeholder.com/400x300?text=صورة+المنتج'">
               <span class="product-category-badge">
@@ -300,15 +306,15 @@
               </div>
             </div>
             <div class="product-actions">
-              <button class="action-btn edit" onclick="editProduct('${product._id || product.id}')" title="تعديل">
+              <button class="action-btn edit" onclick="editProduct('${product._id}')" title="تعديل">
                 <i class="fas fa-edit"></i>
               </button>
-              <button class="action-btn delete" onclick="confirmDelete('${product._id || product.id}')" title="حذف">
+              <button class="action-btn delete" onclick="confirmDelete('${product._id}')" title="حذف">
                 <i class="fas fa-trash-alt"></i>
               </button>
             </div>
           </div>
-        `).join('');
+        `}).join('');
       }
 
       // Delete confirmation

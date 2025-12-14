@@ -21,113 +21,10 @@ const CONFIG = {
   }
 };
 
-// ============ SAMPLE DATA ============
-const SAMPLE_PRODUCTS = [
-  {
-    id: 1,
-    title: 'تصميم موقع ويب احترافي',
-    description: 'تصميم موقع ويب متجاوب وعصري باستخدام أحدث التقنيات',
-    price: 500,
-    category: 'programming',
-    image: 'https://images.unsplash.com/photo-1547658719-da2b51169166?w=600&h=400&fit=crop',
-    sellerId: 'sample1',
-    sellerName: 'أحمد محمد',
-    rating: 4.8,
-    reviews: 12,
-    createdAt: Date.now()
-  },
-  {
-    id: 2,
-    title: 'تصميم شعار وهوية بصرية',
-    description: 'تصميم شعار فريد مع ملفات قابلة للتعديل وهوية بصرية كاملة',
-    price: 300,
-    category: 'design',
-    image: 'https://images.unsplash.com/photo-1626785774573-4b799315345d?w=600&h=400&fit=crop',
-    sellerId: 'sample2',
-    sellerName: 'سارة أحمد',
-    rating: 4.9,
-    reviews: 25,
-    createdAt: Date.now()
-  },
-  {
-    id: 3,
-    title: 'لوحة فنية مرسومة يدوياً',
-    description: 'لوحة فنية أصلية مرسومة بالألوان الزيتية على قماش حقيقي',
-    price: 450,
-    category: 'art',
-    image: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=600&h=400&fit=crop',
-    sellerId: 'sample3',
-    sellerName: 'محمد علي',
-    rating: 5.0,
-    reviews: 8,
-    createdAt: Date.now()
-  },
-  {
-    id: 4,
-    title: 'إكسسوارات يدوية مميزة',
-    description: 'مجموعة من الإكسسوارات المصنوعة يدوياً بتصاميم فريدة',
-    price: 150,
-    category: 'crafts',
-    image: 'https://images.unsplash.com/photo-1611085583191-a3b181a88401?w=600&h=400&fit=crop',
-    sellerId: 'sample4',
-    sellerName: 'نور الهدى',
-    rating: 4.7,
-    reviews: 15,
-    createdAt: Date.now()
-  },
-  {
-    id: 5,
-    title: 'دروس خصوصية في البرمجة',
-    description: 'دروس أونلاين في أساسيات البرمجة وتطوير المواقع للمبتدئين',
-    price: 100,
-    category: 'education',
-    image: 'https://images.unsplash.com/photo-1587620962725-abab7fe55159?w=600&h=400&fit=crop',
-    sellerId: 'sample5',
-    sellerName: 'خالد عبدالله',
-    rating: 4.6,
-    reviews: 30,
-    createdAt: Date.now()
-  },
-  {
-    id: 6,
-    title: 'تطبيق موبايل متكامل',
-    description: 'تطوير تطبيق موبايل لنظامي Android و iOS بتصميم احترافي',
-    price: 800,
-    category: 'programming',
-    image: 'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=600&h=400&fit=crop',
-    sellerId: 'sample1',
-    sellerName: 'أحمد محمد',
-    rating: 4.9,
-    reviews: 18,
-    createdAt: Date.now()
-  },
-  {
-    id: 7,
-    title: 'تصميم بوستر إعلاني',
-    description: 'تصميم بوستر إعلاني جذاب لوسائل التواصل الاجتماعي',
-    price: 80,
-    category: 'design',
-    image: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=600&h=400&fit=crop',
-    sellerId: 'sample2',
-    sellerName: 'سارة أحمد',
-    rating: 4.8,
-    reviews: 40,
-    createdAt: Date.now()
-  },
-  {
-    id: 8,
-    title: 'مونتاج فيديوهات احترافي',
-    description: 'مونتاج فيديوهات بجودة عالية مع مؤثرات بصرية وصوتية مميزة',
-    price: 200,
-    category: 'other',
-    image: 'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=600&h=400&fit=crop',
-    sellerId: 'sample6',
-    sellerName: 'يوسف حسن',
-    rating: 4.7,
-    reviews: 22,
-    createdAt: Date.now()
-  }
-];
+// ============ SAMPLE DATA REMOVED ============
+// تم حذف البيانات الوهمية - التطبيق يعتمد فقط على API
+// SAMPLE_PRODUCTS was removed to enforce API-only data flow
+
 
 // ============ STORAGE UTILITIES ============
 const Storage = {
@@ -259,16 +156,20 @@ const UserManager = {
   }
 };
 
-// ============ PRODUCT MANAGEMENT ============
+// ============ PRODUCT MANAGEMENT (LEGACY - Use ProductManagerAPI instead) ============
+// Note: This ProductManager is deprecated. Always use ProductManagerAPI from api.js for products.
 const ProductManager = {
   
-  
+  // DEPRECATED: Do not use for fetching products. Use ProductManagerAPI.getAllProducts()
   getAllProducts() {
-    return Storage.get(CONFIG.storageKeys.products) || SAMPLE_PRODUCTS;
+    console.warn('ProductManager.getAllProducts() is deprecated. Use ProductManagerAPI.getAllProducts() instead.');
+    return []; // Return empty - no fallback to sample data
   },
   
+  // DEPRECATED: Products are managed by backend API now
   saveProducts(products) {
-    return Storage.set(CONFIG.storageKeys.products, products);
+    console.warn('ProductManager.saveProducts() is deprecated. Products are managed by the backend.');
+    return false;
   },
   
   getProductById(id) {
@@ -495,8 +396,18 @@ const UI = {
   },
   
   createProductCard(product) {
+    // Validate product has a valid MongoDB _id
+    const productId = product._id;
+    if (!productId || typeof productId !== 'string') {
+      console.warn('Invalid product skipped', product);
+      return ''; // Return empty string - don't render invalid products
+    }
+    
+    // Safely handle rating (might be undefined or 0)
+    const rating = product.rating != null ? product.rating.toFixed(1) : '0.0';
+    
     return `
-      <article class="product-card" data-id="${product._id || product.id}">
+      <article class="product-card" data-id="${productId}">
         <div class="product-image">
           <img src="${product.image}" alt="${product.title}" loading="lazy" onerror="this.src='https://via.placeholder.com/600x400?text=صورة+المنتج'">
           <span class="product-category-badge">
@@ -508,7 +419,7 @@ const UI = {
           <h3 class="product-title">${product.title}</h3>
           <div class="product-seller">
             <i class="fas fa-user-circle"></i>
-            <span>${product.sellerName}</span>
+            <span>${product.sellerName || 'مستخدم مشرق'}</span>
           </div>
           <div class="product-footer">
             <div class="product-price">
@@ -517,7 +428,7 @@ const UI = {
             </div>
             <div class="product-rating">
               <i class="fas fa-star"></i>
-              <span>${product.rating.toFixed(1)}</span>
+              <span>${rating}</span>
             </div>
           </div>
         </div>
@@ -708,45 +619,65 @@ function initMobileMenu() {
 }
 
 // ============ LOAD LATEST PRODUCTS ============
-// ============ LOAD LATEST PRODUCTS ============
+// This function ONLY uses API - no fallback to LocalStorage
 async function loadLatestProducts() {
   const grid = document.getElementById('latestProductsGrid');
   if (!grid) return;
   
-  let products = [];
+  // Show loading state
+  grid.innerHTML = `
+    <div class="loading-state" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+      <i class="fas fa-spinner fa-spin fa-2x" style="color: var(--brand-primary);"></i>
+      <p style="margin-top: 16px; color: var(--text-secondary);">جاري تحميل المنتجات...</p>
+    </div>
+  `;
   
   try {
-      if (typeof ProductManagerAPI !== 'undefined') {
-          // Use Backend API
-          products = await ProductManagerAPI.getLatestProducts(8);
-      } else {
-          // Fallback to local storage (should typically not happen if api.js is loaded)
-          products = ProductManager.getLatestProducts(8);
-      }
-  } catch (e) {
-      console.error("Error loading latest products:", e);
-  }
-  
-  if (!products || products.length === 0) {
+    // Strict API usage - no fallback
+    if (typeof ProductManagerAPI === 'undefined') {
+      throw new Error('ProductManagerAPI is not available. Make sure api.js is loaded.');
+    }
+    
+    const products = await ProductManagerAPI.getLatestProducts(8);
+    
+    if (!products || products.length === 0) {
+      grid.innerHTML = `
+        <div class="empty-state">
+          <i class="fas fa-box-open"></i>
+          <p>لا توجد منتجات حالياً</p>
+          <a href="register.html" class="btn primary">كن أول البائعين!</a>
+        </div>
+      `;
+      return;
+    }
+    
+    // Filter out any products without valid _id and render
+    const validProducts = products.filter(p => p._id && typeof p._id === 'string');
+    grid.innerHTML = validProducts.map(product => UI.createProductCard(product)).join('');
+    
+    // Add click handlers - only for cards that were successfully rendered
+    grid.querySelectorAll('.product-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const id = card.dataset.id;
+        if (id && id.length >= 12) { // Basic MongoDB ObjectId validation
+          window.location.href = `product.html?id=${id}`;
+        }
+      });
+    });
+    
+  } catch (error) {
+    console.error('Error loading products from API:', error);
     grid.innerHTML = `
-      <div class="empty-state">
-        <i class="fas fa-box-open"></i>
-        <p>لا توجد منتجات حالياً</p>
-        <a href="register.html" class="btn primary">كن أول البائعين!</a>
+      <div class="empty-state" style="grid-column: 1 / -1;">
+        <i class="fas fa-exclamation-triangle"></i>
+        <p>حدث خطأ أثناء تحميل المنتجات</p>
+        <button class="btn primary" onclick="loadLatestProducts()">
+          <i class="fas fa-redo"></i>
+          إعادة المحاولة
+        </button>
       </div>
     `;
-    return;
   }
-  
-  grid.innerHTML = products.map(product => UI.createProductCard(product)).join('');
-  
-  // Add click handlers
-  grid.querySelectorAll('.product-card').forEach(card => {
-    card.addEventListener('click', () => {
-      const id = card.dataset.id;
-      window.location.href = `product.html?id=${id}`;
-    });
-  });
 }
 
 // ============ SET CURRENT YEAR ============
@@ -778,8 +709,8 @@ function initSmoothScroll() {
 
 // ============ INITIALIZE APP ============
 document.addEventListener('DOMContentLoaded', () => {
-  // Initialize products in storage
-  ProductManager.initializeProducts();
+  // Note: ProductManager.initializeProducts() was removed.
+  // Products are now fetched exclusively from the backend API.
   
   // Update auth buttons based on login state
   UI.updateAuthButtons();
