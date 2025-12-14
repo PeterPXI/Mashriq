@@ -20,6 +20,7 @@ const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const path = require('path');
+const mongoose = require('mongoose');
 const connectDB = require('./config/db');
 
 // Models
@@ -533,7 +534,6 @@ app.get('/api/users/:id', async (req, res) => {
 // ============ HTML ROUTES (SPA Support) ============
 
 const htmlPages = ['index', 'login', 'register', 'products', 'product', 'add-product', 'dashboard', 'profile', 'about'];
-const mongoose = require('mongoose'); // Needed helper for health check
 
 htmlPages.forEach(page => {
   app.get(`/${page}`, (req, res) => {
