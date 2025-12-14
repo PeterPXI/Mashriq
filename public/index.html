@@ -486,7 +486,7 @@
     <!-- Custom Scripts -->
     <!-- Custom Scripts -->
     <script src="api.js"></script>
-    <script src="app.js"></script>
+    
     
     <script>
       // Fetch Real Stats from API
@@ -526,6 +526,37 @@
         }
       });
     </script>
+    <script>
+  document.addEventListener('DOMContentLoaded', async () => {
+    try {
+      const grid = document.querySelector('.products-grid');
+      if (!grid) return;
+
+      grid.innerHTML = '<p>جاري تحميل المنتجات...</p>';
+
+      const products = await ProductManagerAPI.getLatestProducts(8);
+
+      const valid = products.filter(p => p && p._id);
+
+      if (valid.length === 0) {
+        grid.innerHTML = '<p>لا توجد منتجات حالياً</p>';
+        return;
+      }
+
+      grid.innerHTML = valid.map(p => `
+        <article class="product-card" onclick="location.href='product.html?id=${p._id}'">
+          <img src="${p.image}" alt="">
+          <h3>${p.title}</h3>
+          <p>${p.price} جنيه</p>
+        </article>
+      `).join('');
+
+    } catch (e) {
+      console.error(e);
+    }
+  });
+</script>
+
   </body>
 </html>
 
