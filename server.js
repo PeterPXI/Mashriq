@@ -28,7 +28,6 @@ const User = require('./models/User');
 const Product = require('./models/Product');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'mashriq_simple_secret';
 
 // Connect to Database
@@ -561,7 +560,8 @@ app.use((req, res) => {
 
 // ============ START SERVER ============
 
-// Listen only after DB connection logic (though connectDB is async, Express can start)
+const PORT = process.env.PORT || 8080;
+
 app.listen(PORT, () => {
-  console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
