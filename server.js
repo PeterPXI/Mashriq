@@ -5,23 +5,13 @@
    Railway-Ready Deployment Configuration
    ======================================== */
 
-// 1. Load env vars BEFORE anything else
-if (process.env.NODE_ENV !== 'production') {
-    const dotenvResult = require('dotenv').config();
-    if (dotenvResult.error) {
-        console.log('ℹ️  Note: No .env file found (using system environment variables)');
-    } else {
-        console.log('✅ Local .env file loaded successfully');
-    }
-}
-
 const express = require('express');
+const mongoose = require('mongoose');
+require('dotenv').config();
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const path = require('path');
-const mongoose = require('mongoose');
-const connectDB = require('./config/db');
 
 // Models
 const User = require('./models/User');
@@ -30,10 +20,7 @@ const Product = require('./models/Product');
 const app = express();
 const JWT_SECRET = process.env.JWT_SECRET || 'mashriq_simple_secret';
 
-// Connect to Database
-connectDB();
-
-// ============ PRODUCTION MIDDLEWARE ============
+// ============ MIDDLEWARE ============
 
 // Trust proxy for Railway/production environments
 app.set('trust proxy', 1);
@@ -73,6 +60,12 @@ app.use((req, res, next) => {
   next();
 });
 
+// ============ DATABASE CONNECTION ============
+
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log('✅ MongoDB Connected'))
+  .catch(err => console.error('❌ MongoDB Connection Error:', err));
+
 // ============ AUTHENTICATION MIDDLEWARE ============
 const authenticateToken = async (req, res, next) => {
   let token;
@@ -100,12 +93,7 @@ const authenticateToken = async (req, res, next) => {
 
 // ============ HEALTH CHECK ENDPOINT ============
 app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'healthy', 
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development',
-    dbState: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
-  });
+  res.status(200).json({ status: "ok" });
 });
 
 // ============ AUTH ROUTES ============
