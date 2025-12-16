@@ -156,96 +156,9 @@ const UserManager = {
   }
 };
 
-// ============ PRODUCT MANAGEMENT (LEGACY - Use ProductManagerAPI instead) ============
-// Note: This ProductManager is deprecated. Always use ProductManagerAPI from api.js for products.
-const ProductManager = {
-  
-  // DEPRECATED: Do not use for fetching products. Use ProductManagerAPI.getAllProducts()
-  getAllProducts() {
-    console.warn('ProductManager.getAllProducts() is deprecated. Use ProductManagerAPI.getAllProducts() instead.');
-    return []; // Return empty - no fallback to sample data
-  },
-  
-  // DEPRECATED: Products are managed by backend API now
-  saveProducts(products) {
-    console.warn('ProductManager.saveProducts() is deprecated. Products are managed by the backend.');
-    return false;
-  },
-  
-  getProductById(id) {
-    const products = this.getAllProducts();
-    return products.find(p => p.id === id);
-  },
-  
-  getProductsByCategory(category) {
-    const products = this.getAllProducts();
-    return products.filter(p => p.category === category);
-  },
-  
-  getProductsBySeller(sellerId) {
-    const products = this.getAllProducts();
-    return products.filter(p => p.sellerId === sellerId);
-  },
-  
-  addProduct(productData) {
-    const currentUser = UserManager.getCurrentUser();
-    if (!currentUser) {
-      return { success: false, message: 'يجب تسجيل الدخول أولاً' };
-    }
-    
-    const products = this.getAllProducts();
-    const newProduct = {
-      id: Date.now(),
-      ...productData,
-      sellerId: currentUser.id,
-      sellerName: currentUser.name,
-      rating: 0,
-      reviews: 0,
-      createdAt: Date.now()
-    };
-    
-    products.unshift(newProduct);
-    this.saveProducts(products);
-    
-    return { success: true, product: newProduct };
-  },
-  
-  updateProduct(id, updates) {
-    const products = this.getAllProducts();
-    const index = products.findIndex(p => p.id === id);
-    
-    if (index === -1) {
-      return { success: false, message: 'المنتج غير موجود' };
-    }
-    
-    products[index] = { ...products[index], ...updates };
-    this.saveProducts(products);
-    
-    return { success: true, product: products[index] };
-  },
-  
-  deleteProduct(id) {
-    const products = this.getAllProducts();
-    const filteredProducts = products.filter(p => p.id !== id);
-    this.saveProducts(filteredProducts);
-    return { success: true };
-  },
-  
-  searchProducts(query) {
-    const products = this.getAllProducts();
-    const searchTerm = query.toLowerCase();
-    return products.filter(p => 
-      p.title.toLowerCase().includes(searchTerm) ||
-      p.description.toLowerCase().includes(searchTerm) ||
-      p.sellerName.toLowerCase().includes(searchTerm)
-    );
-  },
-  
-  getLatestProducts(limit = 8) {
-    const products = this.getAllProducts();
-    return products.slice(0, limit);
-  }
-};
+// ============ PRODUCT MANAGEMENT REMOVED ============
+// ProductManager has been replaced by ServiceManagerAPI in api.js
+// All logic should use API directly.
 
 // ============ CART MANAGEMENT REMOVED ============
 // Cart functionality has been removed.

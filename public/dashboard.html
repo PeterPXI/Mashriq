@@ -229,7 +229,7 @@
       async function loadUserData() {
         // Use API to verify token/user state first
         const userCheck = await UserManagerAPI.getCurrentUser();
-        const user = userCheck || JSON.parse(localStorage.getItem('edumarket_current_user')); // Fallback purely for display name if API slow, but validation happened above
+        const user = userCheck || JSON.parse(localStorage.getItem('mashriq_current_user')); // Fallback purely for display name if API slow, but validation happened above
 
         if (!user) { 
            window.location.href = 'login.html';
@@ -241,10 +241,11 @@
 
         try {
             // Get user's products from API
-            const myProducts = await ProductManagerAPI.getMyProducts();
+            const myProducts = await ServiceManagerAPI.getMyServices();
 
             // Update stats
-            document.getElementById('productsCount').textContent = myProducts.length;
+            const servicesCountEl = document.getElementById('servicesCount');
+            if (servicesCountEl) servicesCountEl.textContent = myProducts.length;
             document.getElementById('salesCount').textContent = user.sales || 0;
             document.getElementById('totalEarnings').textContent = (user.sales || 0) * 100 + ' جنيه';
             
@@ -332,7 +333,7 @@
 
       document.getElementById('confirmDeleteBtn').addEventListener('click', async function() {
         if (productToDelete) {
-          const result = await ProductManagerAPI.deleteProduct(productToDelete);
+          const result = await ServiceManagerAPI.deleteService(productToDelete);
           
           if (result && result.success) {
              UI.showToast('تم حذف المنتج بنجاح', 'success');
