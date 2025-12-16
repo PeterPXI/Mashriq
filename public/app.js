@@ -1,15 +1,15 @@
 /* ========================================
-   EduMarket - Main Application JavaScript
+   Mashriq (مشرق) - Main Application JavaScript
+   Freelance Services Marketplace
    Created by Peter Youssef
    ======================================== */
 
 // ============ CONFIGURATION ============
 const CONFIG = {
   storageKeys: {
-    users: 'edumarket_users',
-    currentUser: 'edumarket_current_user',
-    products: 'edumarket_products',
-    cart: 'edumarket_cart'
+    users: 'mashriq_users',
+    currentUser: 'mashriq_current_user',
+    products: 'mashriq_products'
   },
   categories: {
     programming: { name: 'برمجة وتطوير', icon: 'fas fa-code' },
@@ -247,89 +247,10 @@ const ProductManager = {
   }
 };
 
-// ============ CART MANAGEMENT ============
-const CartManager = {
-  getCart() {
-    return Storage.get(CONFIG.storageKeys.cart) || [];
-  },
-  
-  saveCart(cart) {
-    return Storage.set(CONFIG.storageKeys.cart, cart);
-  },
-  
-  addToCart(productId) {
-    const cart = this.getCart();
-    const product = ProductManager.getProductById(productId);
-    
-    if (!product) {
-      return { success: false, message: 'المنتج غير موجود' };
-    }
-    
-    const existingItem = cart.find(item => item.productId === productId);
-    
-    if (existingItem) {
-      existingItem.quantity += 1;
-    } else {
-      cart.push({
-        productId,
-        quantity: 1,
-        addedAt: Date.now()
-      });
-    }
-    
-    this.saveCart(cart);
-    this.updateCartBadge();
-    return { success: true };
-  },
-  
-  removeFromCart(productId) {
-    const cart = this.getCart();
-    const filteredCart = cart.filter(item => item.productId !== productId);
-    this.saveCart(filteredCart);
-    this.updateCartBadge();
-    return { success: true };
-  },
-  
-  updateQuantity(productId, quantity) {
-    const cart = this.getCart();
-    const item = cart.find(item => item.productId === productId);
-    
-    if (item) {
-      item.quantity = Math.max(1, quantity);
-      this.saveCart(cart);
-      this.updateCartBadge();
-    }
-    
-    return { success: true };
-  },
-  
-  clearCart() {
-    this.saveCart([]);
-    this.updateCartBadge();
-  },
-  
-  getCartTotal() {
-    const cart = this.getCart();
-    return cart.reduce((total, item) => {
-      const product = ProductManager.getProductById(item.productId);
-      return total + (product ? product.price * item.quantity : 0);
-    }, 0);
-  },
-  
-  getCartCount() {
-    const cart = this.getCart();
-    return cart.reduce((count, item) => count + item.quantity, 0);
-  },
-  
-  updateCartBadge() {
-    const badge = document.getElementById('cartBadge');
-    if (badge) {
-      const count = this.getCartCount();
-      badge.textContent = count;
-      badge.style.display = count > 0 ? 'flex' : 'none';
-    }
-  }
-};
+// ============ CART MANAGEMENT REMOVED ============
+// Cart functionality has been removed.
+// Orders are now placed directly on services via service.html
+// The new order flow uses OrderManagerAPI from api.js
 
 // ============ UI UTILITIES ============
 const UI = {
@@ -463,9 +384,9 @@ const UI = {
               <i class="fas fa-th-large"></i>
               لوحة التحكم
             </a>
-            <a href="add-product.html" class="dropdown-item">
+            <a href="add-service.html" class="dropdown-item">
               <i class="fas fa-plus"></i>
-              إضافة منتج
+              إضافة خدمة
             </a>
             <a href="profile.html" class="dropdown-item">
               <i class="fas fa-user"></i>
@@ -736,8 +657,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initialize smooth scroll
   initSmoothScroll();
   
-  // Update cart badge
-  CartManager.updateCartBadge();
+  // Cart badge update removed - no cart in service marketplace
 });
 
 // ============ TOAST STYLES (injected) ============

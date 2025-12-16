@@ -15,7 +15,12 @@ const path = require('path');
 
 // Models
 const User = require('./models/User');
-const Product = require('./models/Product');
+const { USER_ROLES } = require('./models/User');
+const Product = require('./models/Product');  // Legacy - will be removed after migration
+const Service = require('./models/Service');
+const Order = require('./models/Order');
+const { ORDER_STATUSES } = require('./models/Order');
+const Review = require('./models/Review');
 
 const app = express();
 const JWT_SECRET = process.env.JWT_SECRET || 'mashriq_simple_secret';
@@ -89,6 +94,36 @@ const authenticateToken = async (req, res, next) => {
   } else {
     res.status(401).json({ success: false, message: 'يجب تسجيل الدخول للوصول لهذه الخدمة' });
   }
+};
+
+// ============ SELLER AUTHORIZATION MIDDLEWARE ============
+const requireSeller = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ success: false, message: 'يجب تسجيل الدخول أولاً' });
+  }
+  
+  if (!req.user.isSeller && req.user.role !== USER_ROLES.SELLER && req.user.role !== USER_ROLES.ADMIN) {
+    return res.status(403).json({ 
+      success: false, 
+      message: 'يجب تفعيل وضع البائع أولاً للقيام بهذا الإجراء',
+      requiresSeller: true
+    });
+  }
+  
+  next();
+};
+
+// ============ ADMIN AUTHORIZATION MIDDLEWARE ============
+const requireAdmin = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ success: false, message: 'يجب تسجيل الدخول أولاً' });
+  }
+  
+  if (req.user.role !== USER_ROLES.ADMIN) {
+    return res.status(403).json({ success: false, message: 'هذا الإجراء متاح للمسؤولين فقط' });
+  }
+  
+  next();
 };
 
 // ============ HEALTH CHECK ENDPOINT ============
@@ -292,7 +327,216 @@ app.put('/api/auth/password', authenticateToken, async (req, res) => {
   }
 });
 
-// ============ PRODUCTS ROUTES ============
+// Activate Seller Mode
+app.post('/api/auth/activate-seller', authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    
+    if (user.isSeller) {
+      return res.status(400).json({ success: false, message: 'أنت بائع بالفعل' });
+    }
+    
+    user.isSeller = true;
+    user.role = USER_ROLES.SELLER;
+    user.sellerActivatedAt = Date.now();
+    await user.save();
+    
+    console.log(`🎉 New seller activated: ${user.name} (${user.email})`);
+    
+    res.json({ 
+      success: true, 
+      message: 'تم تفعيل وضع البائع بنجاح! يمكنك الآن إضافة خدماتك 🎉',
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        isSeller: user.isSeller,
+        role: user.role
+      }
+    });
+    
+  } catch (error) {
+    console.error('Activate seller error:', error);
+    res.status(500).json({ success: false, message: 'حدث خطأ في الخادم' });
+  }
+});
+
+// ============ SERVICES ROUTES ============
+
+// Get all services (public)
+app.get('/api/services', async (req, res) => {
+  try {
+    const { category, search, sellerId, limit } = req.query;
+    let query = { status: 'active' };
+    
+    if (category) query.category = category;
+    if (sellerId) query.sellerId = sellerId;
+    if (search) {
+      const regex = new RegExp(search, 'i');
+      query.$or = [
+        { title: regex },
+        { description: regex },
+        { sellerName: regex }
+      ];
+    }
+    
+    let servicesQuery = Service.find(query);
+    if (limit) servicesQuery = servicesQuery.limit(parseInt(limit));
+    
+    const services = await servicesQuery.sort({ createdAt: -1 });
+    
+    res.json({ success: true, services: services.map(s => s.toObject({ getters: true })) });
+  } catch (error) {
+    console.error('Get services error:', error);
+    res.status(500).json({ success: false, message: 'حدث خطأ في الخادم' });
+  }
+});
+
+// Get single service (public)
+app.get('/api/services/:id', async (req, res) => {
+  try {
+    const service = await Service.findById(req.params.id);
+    
+    if (!service) {
+      return res.status(404).json({ success: false, message: 'الخدمة غير موجودة' });
+    }
+    
+    // Get seller info
+    const seller = await User.findById(service.sellerId).select('name username avatar rating reviewsCount bio');
+    
+    res.json({ 
+      success: true, 
+      service: service.toObject({ getters: true }),
+      seller: seller ? seller.toObject({ getters: true }) : null
+    });
+  } catch (error) {
+    if (error.kind === 'ObjectId') {
+      return res.status(404).json({ success: false, message: 'الخدمة غير موجودة' });
+    }
+    console.error('Get service error:', error);
+    res.status(500).json({ success: false, message: 'حدث خطأ في الخادم' });
+  }
+});
+
+// Create new service (seller only)
+app.post('/api/services', authenticateToken, requireSeller, async (req, res) => {
+  try {
+    const { title, description, price, category, image, deliveryTime, revisions, requirements } = req.body;
+    
+    if (!title || !description || !price || !category) {
+      return res.status(400).json({ success: false, message: 'جميع الحقول المطلوبة يجب ملؤها' });
+    }
+    
+    const service = await Service.create({
+      title,
+      description,
+      price: parseFloat(price),
+      category,
+      image: image || 'https://via.placeholder.com/600x400?text=صورة+الخدمة',
+      deliveryTime: deliveryTime || 3,
+      revisions: revisions || 1,
+      requirements: requirements || '',
+      sellerId: req.user.id,
+      sellerName: req.user.name
+    });
+    
+    console.log(`✅ New service added: "${service.title}" by ${req.user.name}`);
+    
+    res.status(201).json({
+      success: true,
+      message: 'تم إضافة الخدمة بنجاح! 🎉',
+      service: service.toObject({ getters: true })
+    });
+    
+  } catch (error) {
+    console.error('Add service error:', error);
+    res.status(500).json({ success: false, message: error.message || 'حدث خطأ في الخادم' });
+  }
+});
+
+// Update service (owner only)
+app.put('/api/services/:id', authenticateToken, async (req, res) => {
+  try {
+    let service = await Service.findById(req.params.id);
+    
+    if (!service) {
+      return res.status(404).json({ success: false, message: 'الخدمة غير موجودة' });
+    }
+    
+    // Check ownership
+    if (!service.isOwner(req.user.id)) {
+      return res.status(403).json({ success: false, message: 'ليس لديك صلاحية لتعديل هذه الخدمة' });
+    }
+    
+    // Update fields
+    const { title, description, price, category, image, deliveryTime, revisions, requirements, status } = req.body;
+    if (title) service.title = title;
+    if (description) service.description = description;
+    if (price) service.price = parseFloat(price);
+    if (category) service.category = category;
+    if (image) service.image = image;
+    if (deliveryTime) service.deliveryTime = deliveryTime;
+    if (revisions !== undefined) service.revisions = revisions;
+    if (requirements !== undefined) service.requirements = requirements;
+    if (status && ['active', 'paused'].includes(status)) service.status = status;
+    
+    await service.save();
+    
+    res.json({
+      success: true,
+      message: 'تم تحديث الخدمة بنجاح',
+      service: service.toObject({ getters: true })
+    });
+    
+  } catch (error) {
+    console.error('Update service error:', error);
+    res.status(500).json({ success: false, message: 'حدث خطأ في الخادم' });
+  }
+});
+
+// Delete/Deactivate service (owner only)
+app.delete('/api/services/:id', authenticateToken, async (req, res) => {
+  try {
+    const service = await Service.findById(req.params.id);
+    
+    if (!service) {
+      return res.status(404).json({ success: false, message: 'الخدمة غير موجودة' });
+    }
+    
+    if (!service.isOwner(req.user.id)) {
+      return res.status(403).json({ success: false, message: 'ليس لديك صلاحية لحذف هذه الخدمة' });
+    }
+    
+    // Soft delete - mark as deleted instead of removing
+    service.status = 'deleted';
+    await service.save();
+    
+    console.log(`🗑️ Service deactivated: "${service.title}"`);
+    
+    res.json({ success: true, message: 'تم حذف الخدمة بنجاح' });
+    
+  } catch (error) {
+    console.error('Delete service error:', error);
+    res.status(500).json({ success: false, message: 'حدث خطأ في الخادم' });
+  }
+});
+
+// Get my services (seller)
+app.get('/api/my-services', authenticateToken, async (req, res) => {
+  try {
+    const services = await Service.find({ 
+      sellerId: req.user.id,
+      status: { $ne: 'deleted' }  // Exclude deleted
+    }).sort({ createdAt: -1 });
+    
+    res.json({ success: true, services: services.map(s => s.toObject({ getters: true })) });
+  } catch (error) {
+    console.error('Get my services error:', error);
+    res.status(500).json({ success: false, message: 'حدث خطأ في الخادم' });
+  }
+});
+
+// ============ PRODUCTS ROUTES (LEGACY - Will be removed after migration) ============
 
 // Get all products
 app.get('/api/products', async (req, res) => {
@@ -448,6 +692,455 @@ app.get('/api/my-products', authenticateToken, async (req, res) => {
     } catch (error) {
         res.status(500).json({ success: false, message: 'Server Error' });
     }
+});
+
+// ============ ORDERS ROUTES ============
+
+// Create new order (buyer)
+app.post('/api/orders', authenticateToken, async (req, res) => {
+  try {
+    const { serviceId, buyerRequirements } = req.body;
+    
+    if (!serviceId) {
+      return res.status(400).json({ success: false, message: 'يجب تحديد الخدمة المطلوبة' });
+    }
+    
+    // Get service
+    const service = await Service.findById(serviceId);
+    if (!service) {
+      return res.status(404).json({ success: false, message: 'الخدمة غير موجودة' });
+    }
+    
+    if (service.status !== 'active') {
+      return res.status(400).json({ success: false, message: 'هذه الخدمة غير متاحة حالياً' });
+    }
+    
+    // Prevent self-purchase
+    if (service.sellerId.toString() === req.user.id.toString()) {
+      return res.status(400).json({ success: false, message: 'لا يمكنك شراء خدمتك الخاصة' });
+    }
+    
+    // Get seller
+    const seller = await User.findById(service.sellerId);
+    if (!seller) {
+      return res.status(404).json({ success: false, message: 'البائع غير موجود' });
+    }
+    
+    // Generate order number
+    const orderNumber = await Order.generateOrderNumber();
+    
+    // Create order
+    const order = await Order.create({
+      orderNumber,
+      serviceId: service._id,
+      serviceSnapshot: {
+        title: service.title,
+        price: service.price,
+        deliveryTime: service.deliveryTime,
+        revisions: service.revisions,
+        image: service.image
+      },
+      buyerId: req.user.id,
+      buyerName: req.user.name,
+      sellerId: service.sellerId,
+      sellerName: service.sellerName,
+      buyerRequirements: buyerRequirements || '',
+      amount: service.price,
+      revisionsAllowed: service.revisions
+    });
+    
+    console.log(`📦 New order created: ${order.orderNumber} - "${service.title}"`);
+    
+    res.status(201).json({
+      success: true,
+      message: 'تم إنشاء الطلب بنجاح! في انتظار قبول البائع 🎉',
+      order: order.toObject({ getters: true })
+    });
+    
+  } catch (error) {
+    console.error('Create order error:', error);
+    res.status(500).json({ success: false, message: error.message || 'حدث خطأ في الخادم' });
+  }
+});
+
+// Get my orders (as buyer or seller)
+app.get('/api/orders', authenticateToken, async (req, res) => {
+  try {
+    const { role, status } = req.query;
+    let query = {};
+    
+    // Filter by role
+    if (role === 'buyer') {
+      query.buyerId = req.user.id;
+    } else if (role === 'seller') {
+      query.sellerId = req.user.id;
+    } else {
+      // Default: get all orders where user is involved
+      query.$or = [
+        { buyerId: req.user.id },
+        { sellerId: req.user.id }
+      ];
+    }
+    
+    // Filter by status
+    if (status) {
+      query.status = status;
+    }
+    
+    const orders = await Order.find(query)
+      .sort({ createdAt: -1 })
+      .limit(50);
+    
+    res.json({ 
+      success: true, 
+      orders: orders.map(o => o.toObject({ getters: true })) 
+    });
+    
+  } catch (error) {
+    console.error('Get orders error:', error);
+    res.status(500).json({ success: false, message: 'حدث خطأ في الخادم' });
+  }
+});
+
+// Get single order
+app.get('/api/orders/:id', authenticateToken, async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'الطلب غير موجود' });
+    }
+    
+    // Check if user is involved
+    if (!order.isInvolved(req.user.id)) {
+      return res.status(403).json({ success: false, message: 'ليس لديك صلاحية لعرض هذا الطلب' });
+    }
+    
+    // Get review if exists
+    const review = await Review.findOne({ orderId: order._id });
+    
+    res.json({ 
+      success: true, 
+      order: order.toObject({ getters: true }),
+      review: review ? review.toObject({ getters: true }) : null,
+      userRole: order.isBuyer(req.user.id) ? 'buyer' : 'seller'
+    });
+    
+  } catch (error) {
+    if (error.kind === 'ObjectId') {
+      return res.status(404).json({ success: false, message: 'الطلب غير موجود' });
+    }
+    console.error('Get order error:', error);
+    res.status(500).json({ success: false, message: 'حدث خطأ في الخادم' });
+  }
+});
+
+// Accept order (seller)
+app.put('/api/orders/:id/accept', authenticateToken, async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'الطلب غير موجود' });
+    }
+    
+    if (!order.isSeller(req.user.id)) {
+      return res.status(403).json({ success: false, message: 'فقط البائع يمكنه قبول الطلب' });
+    }
+    
+    if (order.status !== ORDER_STATUSES.PENDING) {
+      return res.status(400).json({ success: false, message: 'لا يمكن قبول هذا الطلب في حالته الحالية' });
+    }
+    
+    order.status = ORDER_STATUSES.IN_PROGRESS;
+    order.acceptedAt = Date.now();
+    
+    // Recalculate expected delivery from now
+    order.expectedDeliveryDate = new Date(Date.now() + order.serviceSnapshot.deliveryTime * 24 * 60 * 60 * 1000);
+    
+    await order.save();
+    
+    console.log(`✅ Order accepted: ${order.orderNumber}`);
+    
+    res.json({ 
+      success: true, 
+      message: 'تم قبول الطلب! ابدأ العمل الآن 🚀',
+      order: order.toObject({ getters: true })
+    });
+    
+  } catch (error) {
+    console.error('Accept order error:', error);
+    res.status(500).json({ success: false, message: 'حدث خطأ في الخادم' });
+  }
+});
+
+// Decline order (seller)
+app.put('/api/orders/:id/decline', authenticateToken, async (req, res) => {
+  try {
+    const { reason } = req.body;
+    const order = await Order.findById(req.params.id);
+    
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'الطلب غير موجود' });
+    }
+    
+    if (!order.isSeller(req.user.id)) {
+      return res.status(403).json({ success: false, message: 'فقط البائع يمكنه رفض الطلب' });
+    }
+    
+    if (order.status !== ORDER_STATUSES.PENDING) {
+      return res.status(400).json({ success: false, message: 'لا يمكن رفض هذا الطلب في حالته الحالية' });
+    }
+    
+    order.status = ORDER_STATUSES.CANCELLED;
+    order.cancelledBy = 'seller';
+    order.cancellationReason = reason || 'رفض البائع الطلب';
+    
+    await order.save();
+    
+    console.log(`❌ Order declined: ${order.orderNumber}`);
+    
+    res.json({ 
+      success: true, 
+      message: 'تم رفض الطلب',
+      order: order.toObject({ getters: true })
+    });
+    
+  } catch (error) {
+    console.error('Decline order error:', error);
+    res.status(500).json({ success: false, message: 'حدث خطأ في الخادم' });
+  }
+});
+
+// Deliver order (seller)
+app.put('/api/orders/:id/deliver', authenticateToken, async (req, res) => {
+  try {
+    const { deliveryMessage } = req.body;
+    const order = await Order.findById(req.params.id);
+    
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'الطلب غير موجود' });
+    }
+    
+    if (!order.isSeller(req.user.id)) {
+      return res.status(403).json({ success: false, message: 'فقط البائع يمكنه تسليم الطلب' });
+    }
+    
+    if (order.status !== ORDER_STATUSES.IN_PROGRESS && order.status !== ORDER_STATUSES.REVISION) {
+      return res.status(400).json({ success: false, message: 'لا يمكن تسليم هذا الطلب في حالته الحالية' });
+    }
+    
+    order.status = ORDER_STATUSES.DELIVERED;
+    order.deliveredAt = Date.now();
+    order.deliveryMessage = deliveryMessage || '';
+    
+    await order.save();
+    
+    console.log(`📬 Order delivered: ${order.orderNumber}`);
+    
+    res.json({ 
+      success: true, 
+      message: 'تم تسليم الطلب! في انتظار موافقة المشتري ✨',
+      order: order.toObject({ getters: true })
+    });
+    
+  } catch (error) {
+    console.error('Deliver order error:', error);
+    res.status(500).json({ success: false, message: 'حدث خطأ في الخادم' });
+  }
+});
+
+// Approve delivery (buyer)
+app.put('/api/orders/:id/approve', authenticateToken, async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'الطلب غير موجود' });
+    }
+    
+    if (!order.isBuyer(req.user.id)) {
+      return res.status(403).json({ success: false, message: 'فقط المشتري يمكنه الموافقة على التسليم' });
+    }
+    
+    if (order.status !== ORDER_STATUSES.DELIVERED) {
+      return res.status(400).json({ success: false, message: 'لا يمكن الموافقة على هذا الطلب في حالته الحالية' });
+    }
+    
+    order.status = ORDER_STATUSES.COMPLETED;
+    order.completedAt = Date.now();
+    
+    await order.save();
+    
+    // Update service stats
+    await Service.findByIdAndUpdate(order.serviceId, {
+      $inc: { ordersCount: 1 }
+    });
+    
+    // Update seller stats (sales count and balance)
+    await User.findByIdAndUpdate(order.sellerId, {
+      $inc: { 
+        sales: 1,
+        balance: order.sellerEarnings,
+        totalEarnings: order.sellerEarnings
+      }
+    });
+    
+    console.log(`🎉 Order completed: ${order.orderNumber} - Seller earned ${order.sellerEarnings} EGP`);
+    
+    res.json({ 
+      success: true, 
+      message: 'تم إكمال الطلب بنجاح! شكراً لك 🎉',
+      order: order.toObject({ getters: true })
+    });
+    
+  } catch (error) {
+    console.error('Approve order error:', error);
+    res.status(500).json({ success: false, message: 'حدث خطأ في الخادم' });
+  }
+});
+
+// Request revision (buyer)
+app.put('/api/orders/:id/revision', authenticateToken, async (req, res) => {
+  try {
+    const { revisionMessage } = req.body;
+    const order = await Order.findById(req.params.id);
+    
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'الطلب غير موجود' });
+    }
+    
+    if (!order.isBuyer(req.user.id)) {
+      return res.status(403).json({ success: false, message: 'فقط المشتري يمكنه طلب تعديل' });
+    }
+    
+    if (order.status !== ORDER_STATUSES.DELIVERED) {
+      return res.status(400).json({ success: false, message: 'لا يمكن طلب تعديل في حالة الطلب الحالية' });
+    }
+    
+    if (order.revisionsUsed >= order.revisionsAllowed) {
+      return res.status(400).json({ 
+        success: false, 
+        message: `لقد استنفدت جميع التعديلات المسموحة (${order.revisionsAllowed})` 
+      });
+    }
+    
+    order.status = ORDER_STATUSES.REVISION;
+    order.revisionsUsed += 1;
+    order.deliveryMessage = revisionMessage || 'المشتري طلب تعديلات';
+    
+    await order.save();
+    
+    console.log(`🔄 Revision requested: ${order.orderNumber} (${order.revisionsUsed}/${order.revisionsAllowed})`);
+    
+    res.json({ 
+      success: true, 
+      message: `تم طلب التعديل (${order.revisionsUsed}/${order.revisionsAllowed})`,
+      order: order.toObject({ getters: true })
+    });
+    
+  } catch (error) {
+    console.error('Request revision error:', error);
+    res.status(500).json({ success: false, message: 'حدث خطأ في الخادم' });
+  }
+});
+
+// ============ REVIEWS ROUTES ============
+
+// Submit review (buyer, after order completion)
+app.post('/api/reviews', authenticateToken, async (req, res) => {
+  try {
+    const { orderId, rating, comment } = req.body;
+    
+    if (!orderId || !rating) {
+      return res.status(400).json({ success: false, message: 'يجب تحديد الطلب والتقييم' });
+    }
+    
+    if (rating < 1 || rating > 5) {
+      return res.status(400).json({ success: false, message: 'التقييم يجب أن يكون بين 1 و 5' });
+    }
+    
+    // Get order
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'الطلب غير موجود' });
+    }
+    
+    // Must be buyer
+    if (!order.isBuyer(req.user.id)) {
+      return res.status(403).json({ success: false, message: 'فقط المشتري يمكنه تقييم الطلب' });
+    }
+    
+    // Must be completed
+    if (order.status !== ORDER_STATUSES.COMPLETED) {
+      return res.status(400).json({ success: false, message: 'يمكن التقييم فقط بعد إكمال الطلب' });
+    }
+    
+    // Check if already reviewed
+    const existingReview = await Review.findOne({ orderId: order._id });
+    if (existingReview) {
+      return res.status(400).json({ success: false, message: 'تم تقييم هذا الطلب بالفعل' });
+    }
+    
+    // Create review
+    const review = await Review.create({
+      orderId: order._id,
+      serviceId: order.serviceId,
+      reviewerId: req.user.id,
+      reviewerName: req.user.name,
+      sellerId: order.sellerId,
+      rating: parseInt(rating),
+      comment: comment || ''
+    });
+    
+    console.log(`⭐ Review submitted: ${rating}/5 for order ${order.orderNumber}`);
+    
+    res.status(201).json({
+      success: true,
+      message: 'شكراً لتقييمك! ⭐',
+      review: review.toObject({ getters: true })
+    });
+    
+  } catch (error) {
+    console.error('Submit review error:', error);
+    res.status(500).json({ success: false, message: error.message || 'حدث خطأ في الخادم' });
+  }
+});
+
+// Get reviews for a service
+app.get('/api/reviews/service/:serviceId', async (req, res) => {
+  try {
+    const reviews = await Review.find({ serviceId: req.params.serviceId })
+      .sort({ createdAt: -1 })
+      .limit(20);
+    
+    res.json({ 
+      success: true, 
+      reviews: reviews.map(r => r.toObject({ getters: true })) 
+    });
+    
+  } catch (error) {
+    console.error('Get service reviews error:', error);
+    res.status(500).json({ success: false, message: 'حدث خطأ في الخادم' });
+  }
+});
+
+// Get reviews for a seller
+app.get('/api/reviews/seller/:sellerId', async (req, res) => {
+  try {
+    const reviews = await Review.find({ sellerId: req.params.sellerId })
+      .sort({ createdAt: -1 })
+      .limit(20);
+    
+    res.json({ 
+      success: true, 
+      reviews: reviews.map(r => r.toObject({ getters: true })) 
+    });
+    
+  } catch (error) {
+    console.error('Get seller reviews error:', error);
+    res.status(500).json({ success: false, message: 'حدث خطأ في الخادم' });
+  }
 });
 
 // ============ STATS ROUTES ============
