@@ -6,7 +6,7 @@
   <meta name="description" content="إنشاء حساب جديد في منصة مشرق - منصة الخدمات الرقمية العربية">
   <title>إنشاء حساب | مشرق</title>
   <link rel="icon" type="image/png" href="/logo.png">
-  <link rel="stylesheet" href="./assets/css/main.css">
+  <link rel="stylesheet" href="/app/assets/css/main.css">
 </head>
 <body>
   <div class="auth-page">
@@ -14,7 +14,7 @@
       <div class="auth-card">
         <!-- Header -->
         <div class="auth-header">
-          <a href="./index.html">
+          <a href="/app/index.html">
             <img src="/logo.png" alt="مشرق" class="auth-logo">
           </a>
           <h1 class="auth-title">إنشاء حساب جديد</h1>
@@ -95,17 +95,113 @@
         <div class="auth-footer">
           <p>
             لديك حساب بالفعل؟
-            <a href="./login.html">تسجيل الدخول</a>
+            <a href="/app/login.html">تسجيل الدخول</a>
           </p>
           <p style="margin-top: 0.5rem;">
-            <a href="./index.html" style="color: var(--color-text-muted);">← العودة للرئيسية</a>
+            <a href="/app/index.html" style="color: var(--color-text-muted);">← العودة للرئيسية</a>
           </p>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Page Script -->
-  <script type="module" src="./js/pages/register.js"></script>
+  <!-- Scripts -->
+  <script src="/app/js/api.js"></script>
+  <script src="/app/js/auth.js"></script>
+  <script src="/app/js/guards.js"></script>
+  <script src="/app/js/app.js"></script>
+  <script>
+    // Register page logic
+    (function() {
+      document.addEventListener('DOMContentLoaded', function() {
+        // Redirect if already authenticated
+        if (!MashriqGuards.redirectIfAuthenticated()) {
+          return;
+        }
+        
+        setupRegisterForm();
+      });
+      
+      function setupRegisterForm() {
+        var form = document.getElementById('register-form');
+        if (!form) return;
+        
+        form.addEventListener('submit', async function(e) {
+          e.preventDefault();
+          
+          var fullName = document.getElementById('fullName').value.trim();
+          var username = document.getElementById('username').value.trim();
+          var email = document.getElementById('email').value.trim();
+          var password = document.getElementById('password').value;
+          var confirmPassword = document.getElementById('confirmPassword').value;
+          var submitBtn = form.querySelector('button[type="submit"]');
+          var originalText = submitBtn.textContent;
+          
+          // Validation
+          if (!fullName || !username || !email || !password || !confirmPassword) {
+            MashriqApp.showToast('يرجى ملء جميع الحقول المطلوبة', 'error');
+            return;
+          }
+          
+          if (username.length < 3) {
+            MashriqApp.showToast('اسم المستخدم يجب أن يكون 3 أحرف على الأقل', 'error');
+            return;
+          }
+          
+          if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+            MashriqApp.showToast('اسم المستخدم يجب أن يحتوي على حروف وأرقام فقط', 'error');
+            return;
+          }
+          
+          if (!isValidEmail(email)) {
+            MashriqApp.showToast('يرجى إدخال بريد إلكتروني صحيح', 'error');
+            return;
+          }
+          
+          if (password.length < 6) {
+            MashriqApp.showToast('كلمة المرور يجب أن تكون 6 أحرف على الأقل', 'error');
+            return;
+          }
+          
+          if (password !== confirmPassword) {
+            MashriqApp.showToast('كلمتا المرور غير متطابقتين', 'error');
+            return;
+          }
+          
+          try {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'جاري إنشاء الحساب...';
+            MashriqApp.showLoading(true);
+            
+            var response = await MashriqAuth.register({
+              fullName: fullName,
+              username: username,
+              email: email,
+              password: password
+            });
+            
+            if (response.success) {
+              MashriqApp.showToast(response.message || 'تم إنشاء الحساب بنجاح!', 'success');
+              setTimeout(function() {
+                window.location.href = '/app/login.html';
+              }, 1500);
+            } else {
+              throw new Error(response.message || 'فشل إنشاء الحساب');
+            }
+          } catch (error) {
+            MashriqApp.showToast(error.message || 'حدث خطأ أثناء إنشاء الحساب', 'error');
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+          } finally {
+            MashriqApp.showLoading(false);
+          }
+        });
+      }
+      
+      function isValidEmail(email) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+      }
+    })();
+  </script>
 </body>
 </html>

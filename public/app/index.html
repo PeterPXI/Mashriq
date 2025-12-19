@@ -6,7 +6,7 @@
   <meta name="description" content="مشرق - منصة الخدمات الرقمية العربية الأولى. اكتشف خدمات احترافية من أفضل المستقلين العرب.">
   <title>مشرق | منصة الخدمات الرقمية</title>
   <link rel="icon" type="image/png" href="/logo.png">
-  <link rel="stylesheet" href="./assets/css/main.css">
+  <link rel="stylesheet" href="/app/assets/css/main.css">
 </head>
 <body>
   <!-- Navbar -->
@@ -23,8 +23,8 @@
           اكتشف مواهب عربية استثنائية وحقق مشاريعك بأعلى جودة
         </p>
         <div class="hero-actions">
-          <a href="./services.html" class="btn btn-primary btn-lg">استكشف الخدمات</a>
-          <a href="./register.html" class="btn btn-secondary btn-lg">انضم إلينا</a>
+          <a href="/app/services.html" class="btn btn-primary btn-lg">استكشف الخدمات</a>
+          <a href="/app/register.html" class="btn btn-secondary btn-lg">انضم إلينا</a>
         </div>
       </div>
     </section>
@@ -95,7 +95,7 @@
           <p class="feature-text" style="margin-bottom: 1.5rem;">
             انضم إلى آلاف المستقلين والعملاء الذين يثقون بمشرق
           </p>
-          <a href="./register.html" class="btn btn-primary btn-lg">أنشئ حسابك مجاناً</a>
+          <a href="/app/register.html" class="btn btn-primary btn-lg">أنشئ حسابك مجاناً</a>
         </div>
       </div>
     </section>
@@ -104,7 +104,11 @@
   <!-- Footer -->
   <footer id="footer" class="footer"></footer>
 
-  <!-- Page Script -->
-  <script type="module" src="./js/pages/landing.js"></script>
+  <!-- Scripts - Order matters: api -> auth -> guards -> app -> page -->
+  <script src="/app/js/api.js"></script>
+  <script src="/app/js/auth.js"></script>
+  <script src="/app/js/guards.js"></script>
+  <script src="/app/js/app.js"></script>
+  <script src="/app/js/landing.js"></script>
 </body>
 </html>

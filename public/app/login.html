@@ -6,7 +6,7 @@
   <meta name="description" content="تسجيل الدخول إلى منصة مشرق - منصة الخدمات الرقمية العربية">
   <title>تسجيل الدخول | مشرق</title>
   <link rel="icon" type="image/png" href="/logo.png">
-  <link rel="stylesheet" href="./assets/css/main.css">
+  <link rel="stylesheet" href="/app/assets/css/main.css">
 </head>
 <body>
   <div class="auth-page">
@@ -14,7 +14,7 @@
       <div class="auth-card">
         <!-- Header -->
         <div class="auth-header">
-          <a href="./index.html">
+          <a href="/app/index.html">
             <img src="/logo.png" alt="مشرق" class="auth-logo">
           </a>
           <h1 class="auth-title">مرحباً بعودتك</h1>
@@ -56,17 +56,85 @@
         <div class="auth-footer">
           <p>
             ليس لديك حساب؟
-            <a href="./register.html">إنشاء حساب جديد</a>
+            <a href="/app/register.html">إنشاء حساب جديد</a>
           </p>
           <p style="margin-top: 0.5rem;">
-            <a href="./index.html" style="color: var(--color-text-muted);">← العودة للرئيسية</a>
+            <a href="/app/index.html" style="color: var(--color-text-muted);">← العودة للرئيسية</a>
           </p>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Page Script -->
-  <script type="module" src="./js/pages/login.js"></script>
+  <!-- Scripts -->
+  <script src="/app/js/api.js"></script>
+  <script src="/app/js/auth.js"></script>
+  <script src="/app/js/guards.js"></script>
+  <script src="/app/js/app.js"></script>
+  <script>
+    // Login page logic - inline for simplicity
+    (function() {
+      document.addEventListener('DOMContentLoaded', function() {
+        // Redirect if already authenticated
+        if (!MashriqGuards.redirectIfAuthenticated()) {
+          return;
+        }
+        
+        setupLoginForm();
+      });
+      
+      function setupLoginForm() {
+        var form = document.getElementById('login-form');
+        if (!form) return;
+        
+        form.addEventListener('submit', async function(e) {
+          e.preventDefault();
+          
+          var email = document.getElementById('email').value.trim();
+          var password = document.getElementById('password').value;
+          var submitBtn = form.querySelector('button[type="submit"]');
+          var originalText = submitBtn.textContent;
+          
+          // Validation
+          if (!email || !password) {
+            MashriqApp.showToast('يرجى إدخال البريد الإلكتروني وكلمة المرور', 'error');
+            return;
+          }
+          
+          if (!isValidEmail(email)) {
+            MashriqApp.showToast('يرجى إدخال بريد إلكتروني صحيح', 'error');
+            return;
+          }
+          
+          try {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'جاري تسجيل الدخول...';
+            MashriqApp.showLoading(true);
+            
+            var response = await MashriqAuth.login(email, password);
+            
+            if (response.success) {
+              MashriqApp.showToast(response.message || 'تم تسجيل الدخول بنجاح!', 'success');
+              setTimeout(function() {
+                window.location.href = '/app/services.html';
+              }, 500);
+            } else {
+              throw new Error(response.message || 'فشل تسجيل الدخول');
+            }
+          } catch (error) {
+            MashriqApp.showToast(error.message || 'حدث خطأ أثناء تسجيل الدخول', 'error');
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+          } finally {
+            MashriqApp.showLoading(false);
+          }
+        });
+      }
+      
+      function isValidEmail(email) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+      }
+    })();
+  </script>
 </body>
 </html>

@@ -6,7 +6,79 @@
   <meta name="description" content="طلب خدمة على منصة مشرق - منصة الخدمات الرقمية العربية">
   <title>طلب خدمة | مشرق</title>
   <link rel="icon" type="image/png" href="/logo.png">
-  <link rel="stylesheet" href="./assets/css/main.css">
+  <link rel="stylesheet" href="/app/assets/css/main.css">
+  <style>
+    /* Order page specific styles */
+    .service-detail-header {
+      display: flex;
+      gap: var(--space-xl);
+      margin-bottom: var(--space-2xl);
+    }
+    
+    .service-detail-image {
+      width: 300px;
+      height: 200px;
+      object-fit: cover;
+      border-radius: var(--radius-lg);
+      flex-shrink: 0;
+    }
+    
+    .service-detail-info {
+      flex: 1;
+    }
+    
+    .service-detail-title {
+      font-size: var(--font-size-2xl);
+      margin-bottom: var(--space-md);
+    }
+    
+    .service-detail-seller {
+      color: var(--color-text-secondary);
+      margin-bottom: var(--space-lg);
+    }
+    
+    .service-detail-price {
+      font-size: var(--font-size-3xl);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-accent);
+    }
+    
+    .service-detail-section {
+      margin-bottom: var(--space-xl);
+    }
+    
+    .service-detail-section h3 {
+      font-size: var(--font-size-lg);
+      margin-bottom: var(--space-md);
+      color: var(--color-text-primary);
+    }
+    
+    .service-detail-section p {
+      color: var(--color-text-secondary);
+      line-height: var(--line-height-relaxed);
+    }
+    
+    .service-detail-list {
+      list-style: none;
+      padding: 0;
+    }
+    
+    .service-detail-list li {
+      padding: var(--space-sm) 0;
+      color: var(--color-text-secondary);
+    }
+    
+    @media (max-width: 768px) {
+      .service-detail-header {
+        flex-direction: column;
+      }
+      
+      .service-detail-image {
+        width: 100%;
+        height: 200px;
+      }
+    }
+  </style>
 </head>
 <body>
   <!-- Navbar -->
@@ -56,7 +128,7 @@
       
       <!-- Back Link -->
       <div style="margin-top: var(--space-2xl);">
-        <a href="./services.html" class="btn btn-ghost">
+        <a href="/app/services.html" class="btn btn-ghost">
           ← العودة للخدمات
         </a>
       </div>
@@ -66,7 +138,11 @@
   <!-- Footer -->
   <footer id="footer" class="footer"></footer>
 
-  <!-- Page Script -->
-  <script type="module" src="./js/pages/order.js"></script>
+  <!-- Scripts -->
+  <script src="/app/js/api.js"></script>
+  <script src="/app/js/auth.js"></script>
+  <script src="/app/js/guards.js"></script>
+  <script src="/app/js/app.js"></script>
+  <script src="/app/js/order.js"></script>
 </body>
 </html>

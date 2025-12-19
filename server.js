@@ -1315,8 +1315,6 @@ app.get('/api/users/:id', async (req, res) => {
     }
 });
 
-// ============ V2 FRONTEND ROUTES (SPA Support) ============
-
 // ============ FRONTEND APP ROUTES ============
 
 // Root route → App Landing Page
