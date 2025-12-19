@@ -1317,33 +1317,43 @@ app.get('/api/users/:id', async (req, res) => {
 
 // ============ V2 FRONTEND ROUTES (SPA Support) ============
 
-// Root route → V2 Landing Page
+// ============ FRONTEND APP ROUTES ============
+
+// Root route → App Landing Page
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'v2', 'index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'app', 'index.html'));
 });
 
-// V2 App Routes
-const v2Pages = ['index', 'login', 'register', 'services', 'order'];
+// App Routes - Serve new frontend
+const appPages = ['index', 'login', 'register', 'services', 'order'];
 
-v2Pages.forEach(page => {
-  // Handle /v2/page and /v2/page.html
-  app.get(`/v2/${page}`, (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'v2', `${page}.html`));
+appPages.forEach(page => {
+  // Handle /app/page and /app/page.html
+  app.get(`/app/${page}`, (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'app', `${page}.html`));
   });
   
-  app.get(`/v2/${page}.html`, (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'v2', `${page}.html`));
+  app.get(`/app/${page}.html`, (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'app', `${page}.html`));
   });
 });
 
-// ============ LEGACY HTML ROUTES (Deprecated - Redirect to V2) ============
-// Old routes redirect to V2 equivalents
-app.get('/login', (req, res) => res.redirect('/v2/login.html'));
-app.get('/login.html', (req, res) => res.redirect('/v2/login.html'));
-app.get('/register', (req, res) => res.redirect('/v2/register.html'));
-app.get('/register.html', (req, res) => res.redirect('/v2/register.html'));
-app.get('/index', (req, res) => res.redirect('/v2/index.html'));
-app.get('/index.html', (req, res) => res.redirect('/v2/index.html'));
+// ============ LEGACY ROUTES (Redirect to /app) ============
+// All old routes redirect to new /app equivalents
+app.get('/login', (req, res) => res.redirect('/app/login.html'));
+app.get('/login.html', (req, res) => res.redirect('/app/login.html'));
+app.get('/register', (req, res) => res.redirect('/app/register.html'));
+app.get('/register.html', (req, res) => res.redirect('/app/register.html'));
+app.get('/index', (req, res) => res.redirect('/app/index.html'));
+app.get('/index.html', (req, res) => res.redirect('/app/index.html'));
+app.get('/services', (req, res) => res.redirect('/app/services.html'));
+app.get('/services.html', (req, res) => res.redirect('/app/services.html'));
+
+// Legacy V2 redirects (in case someone has old bookmarks)
+app.get('/v2/*', (req, res) => {
+  const page = req.path.replace('/v2/', '').replace('.html', '') || 'index';
+  res.redirect(`/app/${page}.html`);
+});
 
 // ============ ERROR HANDLING ============
 
@@ -1352,13 +1362,13 @@ app.use((err, req, res, next) => {
   res.status(500).json({ success: false, message: 'حدث خطأ في الخادم' });
 });
 
-// Catch-all: API 404 or serve V2 landing
+// Catch-all: API 404 or serve App landing
 app.use((req, res) => {
   if (req.path.startsWith('/api/')) {
     return res.status(404).json({ success: false, message: 'الخدمة غير موجودة' });
   }
-  // All unknown routes → V2 Landing Page
-  res.sendFile(path.join(__dirname, 'public', 'v2', 'index.html'));
+  // All unknown routes → App Landing Page
+  res.sendFile(path.join(__dirname, 'public', 'app', 'index.html'));
 });
 
 // ============ START SERVER ============

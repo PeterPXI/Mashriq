@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="إنشاء حساب جديد في منصة مشرق - منصة الخدمات الرقمية العربية">
+  <title>إنشاء حساب | مشرق</title>
+  <link rel="icon" type="image/png" href="/logo.png">
+  <link rel="stylesheet" href="./assets/css/main.css">
+</head>
+<body>
+  <div class="auth-page">
+    <div class="auth-container">
+      <div class="auth-card">
+        <!-- Header -->
+        <div class="auth-header">
+          <a href="./index.html">
+            <img src="/logo.png" alt="مشرق" class="auth-logo">
+          </a>
+          <h1 class="auth-title">إنشاء حساب جديد</h1>
+          <p class="auth-subtitle">انضم إلى مجتمع مشرق اليوم</p>
+        </div>
+
+        <!-- Register Form -->
+        <form id="register-form">
+          <div class="form-group">
+            <label for="fullName" class="form-label">الاسم الكامل</label>
+            <input 
+              type="text" 
+              id="fullName" 
+              class="form-input" 
+              placeholder="أدخل اسمك الكامل"
+              autocomplete="name"
+              required
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="username" class="form-label">اسم المستخدم</label>
+            <input 
+              type="text" 
+              id="username" 
+              class="form-input" 
+              placeholder="اختر اسم مستخدم فريد"
+              autocomplete="username"
+              required
+            >
+            <p class="form-helper">يمكن أن يحتوي على حروف إنجليزية وأرقام وشرطة سفلية فقط</p>
+          </div>
+
+          <div class="form-group">
+            <label for="email" class="form-label">البريد الإلكتروني</label>
+            <input 
+              type="email" 
+              id="email" 
+              class="form-input" 
+              placeholder="أدخل بريدك الإلكتروني"
+              autocomplete="email"
+              required
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="password" class="form-label">كلمة المرور</label>
+            <input 
+              type="password" 
+              id="password" 
+              class="form-input" 
+              placeholder="أدخل كلمة مرور قوية"
+              autocomplete="new-password"
+              minlength="6"
+              required
+            >
+            <p class="form-helper">يجب أن تكون 6 أحرف على الأقل</p>
+          </div>
+
+          <div class="form-group">
+            <label for="confirmPassword" class="form-label">تأكيد كلمة المرور</label>
+            <input 
+              type="password" 
+              id="confirmPassword" 
+              class="form-input" 
+              placeholder="أعد إدخال كلمة المرور"
+              autocomplete="new-password"
+              required
+            >
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block btn-lg">
+            إنشاء حساب
+          </button>
+        </form>
+
+        <!-- Footer -->
+        <div class="auth-footer">
+          <p>
+            لديك حساب بالفعل؟
+            <a href="./login.html">تسجيل الدخول</a>
+          </p>
+          <p style="margin-top: 0.5rem;">
+            <a href="./index.html" style="color: var(--color-text-muted);">← العودة للرئيسية</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Page Script -->
+  <script type="module" src="./js/pages/register.js"></script>
+</body>
+</html>
