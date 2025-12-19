@@ -353,28 +353,26 @@ userSchema.virtual('wallet', {
 // PRE-SAVE HOOKS
 // Automatic operations before saving.
 // NOTE: Password hashing is the ONLY logic allowed here.
-//       All business logic must be in services.
 // ============================================================
 
 /**
  * Pre-save hook: Hash password if modified.
  * Updates the updatedAt timestamp.
  */
-userSchema.pre('save', async function(next) {
+userSchema.pre('save', async function () {
     // Always update the updatedAt timestamp
     this.updatedAt = Date.now();
-    
+
     // Only hash password if it has been modified
-    // The field is named passwordHash but we accept raw password for convenience
     if (!this.isModified('passwordHash')) {
-        return next();
+        return;
     }
-    
-    // Hash the password with bcrypt
+
+    // Hash the password
     const salt = await bcrypt.genSalt(10);
     this.passwordHash = await bcrypt.hash(this.passwordHash, salt);
-    next();
 });
+
 
 // ============================================================
 // INSTANCE METHODS
