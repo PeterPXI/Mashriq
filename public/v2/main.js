@@ -461,7 +461,61 @@ function initLandingPage() {
     if (!heroSection) return;
     
     // Redirect authenticated users to services
-    redirectAuthenticatedFromLanding();
+    if (redirectAuthenticatedFromLanding()) return;
+    
+    // Load dynamic stats from API
+    loadLandingStats();
+}
+
+/**
+ * Load platform statistics from API
+ */
+async function loadLandingStats() {
+    const statsOrders = document.getElementById('statsOrders');
+    const statsServices = document.getElementById('statsServices');
+    const statsUsers = document.getElementById('statsUsers');
+    
+    // Skip if elements don't exist
+    if (!statsOrders || !statsServices || !statsUsers) return;
+    
+    try {
+        const response = await fetch(`${API_BASE}/stats/overview`);
+        const data = await response.json();
+        
+        if (data.success && data.stats) {
+            // Animate numbers
+            animateNumber(statsOrders, data.stats.orders);
+            animateNumber(statsServices, data.stats.services);
+            animateNumber(statsUsers, data.stats.users);
+        }
+    } catch (error) {
+        // Silently fail - show placeholder
+        statsOrders.textContent = '0';
+        statsServices.textContent = '0';
+        statsUsers.textContent = '0';
+    }
+}
+
+/**
+ * Animate number counting up
+ */
+function animateNumber(element, target) {
+    const duration = 1000;
+    const start = 0;
+    const startTime = performance.now();
+    
+    function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const current = Math.floor(start + (target - start) * progress);
+        element.textContent = current > 0 ? `+${current}` : '0';
+        
+        if (progress < 1) {
+            requestAnimationFrame(update);
+        }
+    }
+    
+    requestAnimationFrame(update);
 }
 
 // ============================================================

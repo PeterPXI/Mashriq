@@ -1,360 +1,0 @@
-﻿<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover" />
-    <meta name="theme-color" content="#0a0f1c" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="format-detection" content="telephone=no" />
-    <title>إنشاء حساب جديد | مشرق</title>
-    <meta name="description" content="سجل الآن في مشرق وابدأ في عرض وبيع منتجاتك وخدماتك لطلاب WE School" />
-    <!-- Bootstrap 5 RTL -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" rel="stylesheet" />
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet" />
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-    <!-- Custom Styles (Override Bootstrap) -->
-    <link rel="stylesheet" href="style.css" />
-    <link rel="stylesheet" href="auth.css" />
-  </head>
-  <body>
-    <!-- NAVBAR -->
-    <nav class="navbar navbar-expand-lg fixed-top">
-      <div class="container">
-        <a class="navbar-brand d-flex align-items-center gap-2" href="index.html">
-          <img src="logo.png" alt="مشرق" class="logo-img" />
-          <span class="brand-text">مشرق</span>
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain" aria-controls="navbarMain" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarMain">
-          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-            <li class="nav-item">
-              <a class="nav-link" href="index.html">الرئيسية</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="services.html">الخدمات</a>
-            </li>
-          </ul>
-          <div class="d-flex gap-2">
-            <a href="login.html" class="btn btn-outline-light btn-sm">
-              <i class="fas fa-sign-in-alt me-1"></i>
-              تسجيل الدخول
-            </a>
-          </div>
-        </div>
-      </div>
-    </nav>
-
-    <!-- MAIN CONTENT -->
-    <main class="auth-page">
-      <div class="auth-container">
-        <!-- Left Side - Form -->
-        <div class="auth-form-section">
-          <div class="auth-header">
-            <span class="chip">
-              <i class="fas fa-user-plus"></i>
-              حساب جديد
-            </span>
-            <h2>انضم إلى مشرق</h2>
-            <p>سجل الآن وابدأ في عرض إبداعاتك للعالم</p>
-          </div>
-
-          <form id="registerForm" class="auth-form">
-            <div class="form-row">
-              <div class="form-group">
-                <label for="firstName">الاسم الأول</label>
-                <div class="input-wrapper">
-                  <i class="fas fa-user"></i>
-                  <input type="text" id="firstName" name="firstName" placeholder="أدخل اسمك الأول" required />
-                </div>
-              </div>
-              <div class="form-group">
-                <label for="lastName">الاسم الأخير</label>
-                <div class="input-wrapper">
-                  <i class="fas fa-user"></i>
-                  <input type="text" id="lastName" name="lastName" placeholder="أدخل اسمك الأخير" required />
-                </div>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label for="username">اسم المستخدم</label>
-              <div class="input-wrapper">
-                <i class="fas fa-at"></i>
-                <input type="text" id="username" name="username" placeholder="اختر اسم مستخدم فريد" required />
-              </div>
-              <span class="input-hint">سيظهر على منتجاتك وملفك الشخصي</span>
-            </div>
-
-            <div class="form-group">
-              <label for="email">البريد الإلكتروني</label>
-              <div class="input-wrapper">
-                <i class="fas fa-envelope"></i>
-                <input type="email" id="email" name="email" placeholder="example@email.com" required />
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label for="phone">رقم الهاتف</label>
-              <div class="input-wrapper">
-                <i class="fas fa-phone"></i>
-                <input type="tel" id="phone" name="phone" placeholder="01xxxxxxxxx" />
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label for="grade">الصف الدراسي</label>
-              <div class="input-wrapper select-wrapper">
-                <i class="fas fa-sun"></i>
-                <select id="grade" name="grade" required>
-                  <option value="">اختر الصف الدراسي</option>
-                  <option value="grade10">الصف العاشر</option>
-                  <option value="grade11">الصف الحادي عشر</option>
-                  <option value="grade12">الصف الثاني عشر</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label for="specialization">التخصص / المهارة الرئيسية</label>
-              <div class="input-wrapper select-wrapper">
-                <i class="fas fa-star"></i>
-                <select id="specialization" name="specialization" required>
-                  <option value="">اختر تخصصك</option>
-                  <option value="programming">برمجة وتطوير</option>
-                  <option value="design">تصميم جرافيك</option>
-                  <option value="art">فنون ورسم</option>
-                  <option value="crafts">أشغال يدوية</option>
-                  <option value="education">خدمات تعليمية</option>
-                  <option value="other">أخرى</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label for="password">كلمة المرور</label>
-              <div class="input-wrapper">
-                <i class="fas fa-lock"></i>
-                <input type="password" id="password" name="password" placeholder="••••••••" required minlength="6" />
-                <button type="button" class="toggle-password" onclick="togglePassword('password', this)">
-                  <i class="fas fa-eye"></i>
-                </button>
-              </div>
-              <div class="password-strength" id="passwordStrength">
-                <div class="strength-bar"></div>
-                <span class="strength-text"></span>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label for="confirmPassword">تأكيد كلمة المرور</label>
-              <div class="input-wrapper">
-                <i class="fas fa-lock"></i>
-                <input type="password" id="confirmPassword" name="confirmPassword" placeholder="••••••••" required />
-                <button type="button" class="toggle-password" onclick="togglePassword('confirmPassword', this)">
-                  <i class="fas fa-eye"></i>
-                </button>
-              </div>
-            </div>
-
-            <div class="form-group checkbox-group">
-              <label class="checkbox-container">
-                <input type="checkbox" id="agreeTerms" name="agreeTerms" required />
-                <span class="checkmark"></span>
-                أوافق على <a href="#">الشروط والأحكام</a> و <a href="#">سياسة الخصوصية</a>
-              </label>
-            </div>
-
-            <button type="submit" class="btn primary lg full-width" id="submitBtn">
-              <i class="fas fa-user-plus"></i>
-              إنشاء الحساب
-            </button>
-
-            <div class="auth-footer">
-              <p>لديك حساب بالفعل؟ <a href="login.html">سجل الدخول</a></p>
-            </div>
-          </form>
-        </div>
-
-        <!-- Right Side - Visual -->
-        <div class="auth-visual-section">
-          <div class="visual-content">
-            <div class="visual-icon">
-              <i class="fas fa-rocket"></i>
-            </div>
-            <h3>ابدأ رحلتك الريادية</h3>
-            <p>انضم لمئات الطلاب الموهوبين الذين يحققون دخلاً من إبداعاتهم</p>
-            
-            <div class="features-list">
-              <div class="feature-item">
-                <i class="fas fa-check-circle"></i>
-                <span>عرض منتجاتك وخدماتك مجاناً</span>
-              </div>
-              <div class="feature-item">
-                <i class="fas fa-check-circle"></i>
-                <span>الوصول لآلاف المشترين</span>
-              </div>
-              <div class="feature-item">
-                <i class="fas fa-check-circle"></i>
-                <span>بناء سمعتك وملفك الشخصي</span>
-              </div>
-              <div class="feature-item">
-                <i class="fas fa-check-circle"></i>
-                <span>تعلم ريادة الأعمال عملياً</span>
-              </div>
-            </div>
-
-            <div class="stats-mini">
-              <div class="stat-mini">
-                <span class="number">150+</span>
-                <span class="label">طالب</span>
-              </div>
-              <div class="stat-mini">
-                <span class="number">320+</span>
-                <span class="label">منتج</span>
-              </div>
-              <div class="stat-mini">
-                <span class="number">500+</span>
-                <span class="label">عملية بيع</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </main>
-
-    <!-- FOOTER -->
-    <footer class="auth-bottom-footer">
-      <p>© <span id="year"></span> مشرق — جميع الحقوق محفوظة</p>
-    </footer>
-
-    <script src="api.js"></script>
-    <script src="app.js"></script>
-    <script>
-      // Set year
-      document.getElementById('year').textContent = new Date().getFullYear();
-
-      // Toggle password visibility
-      function togglePassword(inputId, btn) {
-        const input = document.getElementById(inputId);
-        const icon = btn.querySelector('i');
-        
-        if (input.type === 'password') {
-          input.type = 'text';
-          icon.classList.replace('fa-eye', 'fa-eye-slash');
-        } else {
-          input.type = 'password';
-          icon.classList.replace('fa-eye-slash', 'fa-eye');
-        }
-      }
-
-      // Password strength checker
-      const passwordInput = document.getElementById('password');
-      const strengthBar = document.querySelector('.strength-bar');
-      const strengthText = document.querySelector('.strength-text');
-
-      passwordInput.addEventListener('input', function() {
-        const password = this.value;
-        let strength = 0;
-        let text = '';
-        let color = '';
-
-        if (password.length >= 6) strength++;
-        if (password.length >= 10) strength++;
-        if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
-        if (/\d/.test(password)) strength++;
-        if (/[^a-zA-Z0-9]/.test(password)) strength++;
-
-        switch (strength) {
-          case 0:
-          case 1:
-            text = 'ضعيفة';
-            color = '#f87171';
-            break;
-          case 2:
-            text = 'متوسطة';
-            color = '#fbbf24';
-            break;
-          case 3:
-            text = 'جيدة';
-            color = '#60a5fa';
-            break;
-          case 4:
-          case 5:
-            text = 'قوية';
-            color = '#34d399';
-            break;
-        }
-
-        strengthBar.style.width = (strength * 20) + '%';
-        strengthBar.style.background = color;
-        strengthText.textContent = password.length > 0 ? text : '';
-        strengthText.style.color = color;
-      });
-
-      // Form submission - Strict API
-      document.getElementById('registerForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-
-        const submitBtn = document.getElementById('submitBtn');
-        const password = document.getElementById('password').value;
-        const confirmPassword = document.getElementById('confirmPassword').value;
-
-        if (password !== confirmPassword) {
-          UI.showToast('كلمتا المرور غير متطابقتين', 'error');
-          return;
-        }
-
-        const userData = {
-          name: document.getElementById('firstName').value + ' ' + document.getElementById('lastName').value,
-          username: document.getElementById('username').value,
-          email: document.getElementById('email').value,
-          phone: document.getElementById('phone').value,
-          grade: document.getElementById('grade').value,
-          specialization: document.getElementById('specialization').value,
-          password: password
-        };
-
-        // Disable button during request
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري إنشاء الحساب...';
-
-        try {
-          // Try API first
-          const result = await API.auth.register(userData);
-
-          if (result && result.success) {
-            UI.showToast('تم إنشاء الحساب بنجاح! مرحباً بك 🎉', 'success');
-            setTimeout(() => {
-              window.location.href = 'dashboard.html';
-            }, 1500);
-          } else {
-            UI.showToast(result.message || 'فشل إنشاء الحساب', 'error');
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = '<i class="fas fa-user-plus"></i> إنشاء الحساب';
-          }
-        } catch (error) {
-          console.error('Registration error:', error);
-          UI.showToast('حدث خطأ في الاتصال بالخادم', 'error');
-          submitBtn.disabled = false;
-          submitBtn.innerHTML = '<i class="fas fa-user-plus"></i> إنشاء الحساب';
-        }
-      });
-
-      // Redirect if already logged in
-      if (API.auth.isLoggedIn() || UserManager.isLoggedIn()) {
-        window.location.href = 'dashboard.html';
-      }
-    </script>
-    <!-- Bootstrap 5 JS Bundle -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-  </body>
-</html>
-
-
-

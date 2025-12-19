@@ -138,6 +138,34 @@ app.get('/api/health', (req, res) => {
   res.status(200).json({ status: "ok" });
 });
 
+// ============ STATS ROUTES (Public) ============
+
+// Get platform statistics for landing page
+app.get('/api/stats/overview', async (req, res) => {
+  try {
+    const Service = require('./models/Service');
+    const Order = require('./models/Order');
+    
+    const [usersCount, servicesCount, ordersCount] = await Promise.all([
+      User.countDocuments({ isActive: true }),
+      Service.countDocuments({ status: 'active' }),
+      Order.countDocuments()
+    ]);
+    
+    res.json({
+      success: true,
+      stats: {
+        users: usersCount,
+        services: servicesCount,
+        orders: ordersCount
+      }
+    });
+  } catch (error) {
+    console.error('Stats error:', error);
+    res.status(500).json({ success: false, message: 'حدث خطأ في جلب الإحصائيات' });
+  }
+});
+
 // ============ AUTH ROUTES ============
 
 // Register
@@ -1287,19 +1315,35 @@ app.get('/api/users/:id', async (req, res) => {
     }
 });
 
-// ============ HTML ROUTES (SPA Support) ============
+// ============ V2 FRONTEND ROUTES (SPA Support) ============
 
-const htmlPages = ['index', 'login', 'register', 'products', 'product', 'add-product', 'dashboard', 'profile', 'about'];
+// Root route → V2 Landing Page
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'v2', 'index.html'));
+});
 
-htmlPages.forEach(page => {
-  app.get(`/${page}`, (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', `${page}.html`));
+// V2 App Routes
+const v2Pages = ['index', 'login', 'register', 'services', 'order'];
+
+v2Pages.forEach(page => {
+  // Handle /v2/page and /v2/page.html
+  app.get(`/v2/${page}`, (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'v2', `${page}.html`));
   });
   
-  app.get(`/${page}.html`, (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', `${page}.html`));
+  app.get(`/v2/${page}.html`, (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'v2', `${page}.html`));
   });
 });
+
+// ============ LEGACY HTML ROUTES (Deprecated - Redirect to V2) ============
+// Old routes redirect to V2 equivalents
+app.get('/login', (req, res) => res.redirect('/v2/login.html'));
+app.get('/login.html', (req, res) => res.redirect('/v2/login.html'));
+app.get('/register', (req, res) => res.redirect('/v2/register.html'));
+app.get('/register.html', (req, res) => res.redirect('/v2/register.html'));
+app.get('/index', (req, res) => res.redirect('/v2/index.html'));
+app.get('/index.html', (req, res) => res.redirect('/v2/index.html'));
 
 // ============ ERROR HANDLING ============
 
@@ -1308,11 +1352,12 @@ app.use((err, req, res, next) => {
   res.status(500).json({ success: false, message: 'حدث خطأ في الخادم' });
 });
 
+// Catch-all: API 404 or serve V2 landing
 app.use((req, res) => {
   if (req.path.startsWith('/api/')) {
     return res.status(404).json({ success: false, message: 'الخدمة غير موجودة' });
   }
-  // Redirect to V2 frontend
+  // All unknown routes → V2 Landing Page
   res.sendFile(path.join(__dirname, 'public', 'v2', 'index.html'));
 });
 
