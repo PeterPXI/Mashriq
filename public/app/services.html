@@ -6,11 +6,150 @@
   <meta name="description" content="استكشف الخدمات الرقمية المميزة على منصة مشرق - تصميم، برمجة، كتابة، وأكثر">
   <title>الخدمات | مشرق</title>
   <link rel="icon" type="image/png" href="/logo.png">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/app/assets/css/main.css">
+  <style>
+    /* Services Page Specific Styles */
+    .loading-state {
+      text-align: center;
+      padding: var(--space-3xl) var(--space-xl);
+      grid-column: 1 / -1;
+    }
+    .loading-state .loading-spinner {
+      margin: 0 auto var(--space-lg);
+    }
+    .loading-state-text {
+      color: var(--color-text-muted);
+      font-size: var(--font-size-lg);
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: var(--space-3xl) var(--space-xl);
+      grid-column: 1 / -1;
+      background: var(--color-bg-card);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+    }
+    .empty-state-icon {
+      font-size: 5rem;
+      margin-bottom: var(--space-lg);
+      opacity: 0.6;
+    }
+    .empty-state-title {
+      font-size: var(--font-size-xl);
+      margin-bottom: var(--space-sm);
+      color: var(--color-text-primary);
+    }
+    .empty-state-text {
+      color: var(--color-text-muted);
+      margin-bottom: var(--space-xl);
+    }
+    
+    .error-state {
+      text-align: center;
+      padding: var(--space-3xl) var(--space-xl);
+      grid-column: 1 / -1;
+      background: rgba(239, 68, 68, 0.05);
+      border: 1px solid var(--color-error);
+      border-radius: var(--radius-lg);
+    }
+    .error-state-icon {
+      font-size: 4rem;
+      margin-bottom: var(--space-lg);
+    }
+    .error-state-title {
+      font-size: var(--font-size-xl);
+      margin-bottom: var(--space-sm);
+      color: var(--color-error);
+    }
+    .error-state-text {
+      color: var(--color-text-muted);
+      margin-bottom: var(--space-xl);
+    }
+    
+    /* Enhanced Service Card */
+    .service-card {
+      display: flex;
+      flex-direction: column;
+      transition: all var(--transition-normal);
+    }
+    .service-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 12px 40px rgba(255, 107, 53, 0.15);
+    }
+    .service-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .service-description {
+      font-size: var(--font-size-sm);
+      color: var(--color-text-secondary);
+      margin-bottom: var(--space-md);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      flex: 1;
+    }
+    .service-cta {
+      margin-top: auto;
+    }
+    .service-cta .btn {
+      width: 100%;
+    }
+    
+    /* Skeleton Cards */
+    .skeleton-card {
+      background: var(--color-bg-card);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+    .skeleton-image {
+      height: 180px;
+      background: linear-gradient(90deg, var(--color-bg-tertiary) 25%, var(--color-bg-hover) 50%, var(--color-bg-tertiary) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    .skeleton-content {
+      padding: var(--space-lg);
+    }
+    .skeleton-line {
+      height: 16px;
+      background: linear-gradient(90deg, var(--color-bg-tertiary) 25%, var(--color-bg-hover) 50%, var(--color-bg-tertiary) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: var(--radius-sm);
+      margin-bottom: var(--space-sm);
+    }
+    .skeleton-line.short { width: 60%; }
+    .skeleton-line.medium { width: 80%; }
+    .skeleton-line.price { width: 40%; height: 24px; margin-top: var(--space-md); }
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+  </style>
 </head>
 <body>
   <!-- Navbar -->
-  <header id="navbar" class="navbar"></header>
+  <header class="navbar">
+    <div class="container">
+      <a href="/app/index.html" class="navbar-brand">
+        <img src="/logo.png" alt="مشرق" class="navbar-logo">
+        <span class="navbar-title">مشرق</span>
+      </a>
+      <nav>
+        <ul class="navbar-nav">
+          <li><a href="/app/services.html" class="nav-link active">الخدمات</a></li>
+          <li><span id="user-greeting" class="nav-link" style="color: var(--color-text-muted);"></span></li>
+          <li><button id="logout-btn" class="btn btn-ghost">تسجيل الخروج</button></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
 
   <main class="main-content">
     <div class="container">
@@ -48,20 +187,21 @@
 
       <!-- Services Grid -->
       <div id="services-container" class="services-grid">
-        <!-- Services will be loaded dynamically -->
-        <div class="loading-spinner"></div>
+        <!-- Content will be loaded dynamically -->
       </div>
     </div>
   </main>
 
   <!-- Footer -->
-  <footer id="footer" class="footer"></footer>
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <p class="footer-text">© 2024 مشرق - جميع الحقوق محفوظة</p>
+      </div>
+    </div>
+  </footer>
 
   <!-- Scripts -->
-  <script src="/app/js/api.js"></script>
-  <script src="/app/js/auth.js"></script>
-  <script src="/app/js/guards.js"></script>
-  <script src="/app/js/app.js"></script>
   <script src="/app/js/services.js"></script>
 </body>
 </html>

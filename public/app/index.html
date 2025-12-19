@@ -6,11 +6,26 @@
   <meta name="description" content="مشرق - منصة الخدمات الرقمية العربية الأولى. اكتشف خدمات احترافية من أفضل المستقلين العرب.">
   <title>مشرق | منصة الخدمات الرقمية</title>
   <link rel="icon" type="image/png" href="/logo.png">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/app/assets/css/main.css">
 </head>
 <body>
   <!-- Navbar -->
-  <header id="navbar" class="navbar"></header>
+  <header class="navbar">
+    <div class="container">
+      <a href="/app/index.html" class="navbar-brand">
+        <img src="/logo.png" alt="مشرق" class="navbar-logo">
+        <span class="navbar-title">مشرق</span>
+      </a>
+      <nav>
+        <ul class="navbar-nav" id="nav-links">
+          <!-- Will be populated by JS based on auth state -->
+          <li><a href="/app/login.html" class="btn btn-secondary">تسجيل الدخول</a></li>
+          <li><a href="/app/register.html" class="btn btn-primary">إنشاء حساب</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
 
   <main>
     <!-- Hero Section -->
@@ -29,11 +44,12 @@
       </div>
     </section>
 
-    <!-- Features Section -->
+    <!-- Why Mashriq Section -->
     <section class="features">
       <div class="container">
         <h2 class="section-title">لماذا مشرق؟</h2>
         <div class="features-grid">
+          
           <div class="feature-card">
             <div class="feature-icon">
               <svg viewBox="0 0 24 24" fill="currentColor">
@@ -41,7 +57,7 @@
               </svg>
             </div>
             <h3 class="feature-title">جودة مضمونة</h3>
-            <p class="feature-text">نضمن لك جودة عالية في كل خدمة مع نظام تقييم شفاف</p>
+            <p class="feature-text">نضمن لك جودة عالية في كل خدمة مع نظام تقييم شفاف ومراجعات حقيقية</p>
           </div>
           
           <div class="feature-card">
@@ -51,7 +67,7 @@
               </svg>
             </div>
             <h3 class="feature-title">دفع آمن</h3>
-            <p class="feature-text">نظام ضمان مالي يحمي حقوق البائع والمشتري</p>
+            <p class="feature-text">نظام ضمان مالي يحمي حقوق البائع والمشتري حتى اكتمال العمل</p>
           </div>
           
           <div class="feature-card">
@@ -63,24 +79,26 @@
             <h3 class="feature-title">تواصل مباشر</h3>
             <p class="feature-text">نظام محادثة مدمج للتواصل السلس مع مقدمي الخدمات</p>
           </div>
+          
         </div>
       </div>
     </section>
 
     <!-- Stats Section -->
-    <section class="stats" id="stats-container">
+    <section class="stats">
       <div class="container">
-        <div class="stats-grid">
+        <div id="stats-container" class="stats-grid">
+          <!-- Loading State -->
           <div class="stat-item">
-            <div id="stat-users" class="stat-number">0</div>
+            <div class="stat-number stat-loading">-</div>
             <div class="stat-label">مستخدم نشط</div>
           </div>
           <div class="stat-item">
-            <div id="stat-services" class="stat-number">0</div>
+            <div class="stat-number stat-loading">-</div>
             <div class="stat-label">خدمة متاحة</div>
           </div>
           <div class="stat-item">
-            <div id="stat-orders" class="stat-number">0</div>
+            <div class="stat-number stat-loading">-</div>
             <div class="stat-label">طلب مكتمل</div>
           </div>
         </div>
@@ -93,7 +111,7 @@
         <div class="feature-card" style="max-width: 600px; margin: 0 auto; text-align: center;">
           <h3 class="feature-title" style="font-size: 1.5rem; margin-bottom: 1rem;">ابدأ رحلتك الآن</h3>
           <p class="feature-text" style="margin-bottom: 1.5rem;">
-            انضم إلى آلاف المستقلين والعملاء الذين يثقون بمشرق
+            انضم إلى مجتمع المستقلين والعملاء الذين يثقون بمشرق
           </p>
           <a href="/app/register.html" class="btn btn-primary btn-lg">أنشئ حسابك مجاناً</a>
         </div>
@@ -102,13 +120,90 @@
   </main>
 
   <!-- Footer -->
-  <footer id="footer" class="footer"></footer>
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <p class="footer-text">© 2024 مشرق - جميع الحقوق محفوظة</p>
+        <div class="footer-links">
+          <a href="#" class="footer-link">سياسة الخصوصية</a>
+          <a href="#" class="footer-link">الشروط والأحكام</a>
+        </div>
+      </div>
+    </div>
+  </footer>
 
-  <!-- Scripts - Order matters: api -> auth -> guards -> app -> page -->
-  <script src="/app/js/api.js"></script>
-  <script src="/app/js/auth.js"></script>
-  <script src="/app/js/guards.js"></script>
-  <script src="/app/js/app.js"></script>
-  <script src="/app/js/landing.js"></script>
+  <!-- Minimal JS for landing page -->
+  <script>
+    (function() {
+      // Check if authenticated - redirect to services
+      var token = localStorage.getItem('mashriq_token') || localStorage.getItem('token');
+      if (token) {
+        window.location.href = '/app/services.html';
+        return;
+      }
+      
+      // Load stats from API
+      loadStats();
+      
+      async function loadStats() {
+        var statsContainer = document.getElementById('stats-container');
+        
+        try {
+          var response = await fetch('/api/stats/overview');
+          var data = await response.json();
+          
+          if (data.success && data.stats) {
+            renderStats(data.stats);
+          } else {
+            renderFallback();
+          }
+        } catch (error) {
+          console.error('Stats API error:', error);
+          renderFallback();
+        }
+      }
+      
+      function renderStats(stats) {
+        var container = document.getElementById('stats-container');
+        container.innerHTML = 
+          '<div class="stat-item">' +
+            '<div class="stat-number">' + formatNumber(stats.users || 0) + '</div>' +
+            '<div class="stat-label">مستخدم نشط</div>' +
+          '</div>' +
+          '<div class="stat-item">' +
+            '<div class="stat-number">' + formatNumber(stats.services || 0) + '</div>' +
+            '<div class="stat-label">خدمة متاحة</div>' +
+          '</div>' +
+          '<div class="stat-item">' +
+            '<div class="stat-number">' + formatNumber(stats.orders || 0) + '</div>' +
+            '<div class="stat-label">طلب مكتمل</div>' +
+          '</div>';
+      }
+      
+      function renderFallback() {
+        var container = document.getElementById('stats-container');
+        container.innerHTML = 
+          '<div class="stat-item">' +
+            '<div class="stat-number">+</div>' +
+            '<div class="stat-label">مستخدمين نشطين</div>' +
+          '</div>' +
+          '<div class="stat-item">' +
+            '<div class="stat-number">+</div>' +
+            '<div class="stat-label">خدمات متنوعة</div>' +
+          '</div>' +
+          '<div class="stat-item">' +
+            '<div class="stat-number">+</div>' +
+            '<div class="stat-label">طلبات مكتملة</div>' +
+          '</div>';
+      }
+      
+      function formatNumber(num) {
+        if (num >= 1000) {
+          return (num / 1000).toFixed(1) + 'K';
+        }
+        return num.toString();
+      }
+    })();
+  </script>
 </body>
 </html>

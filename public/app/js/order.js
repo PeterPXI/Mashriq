@@ -1,196 +1,339 @@
 /**
  * Mashriq - Order Page Logic
- * Handles service ordering functionality
+ * Protected page - requires authentication
  */
 
 (function() {
+  // =================== CONSTANTS ===================
+  var MIN_REQUIREMENTS_LENGTH = 20;
+  
+  // =================== AUTH CHECK ===================
+  var token = localStorage.getItem('mashriq_token') || localStorage.getItem('token');
+  if (!token) {
+    window.location.href = '/app/login.html';
+    return;
+  }
+  
+  // =================== CURRENT USER ===================
+  var currentUser = null;
+  try {
+    var userData = localStorage.getItem('mashriq_user') || localStorage.getItem('user');
+    if (userData) currentUser = JSON.parse(userData);
+  } catch (e) {}
+  
+  // =================== LOGOUT ===================
+  var logoutBtn = document.getElementById('logout-btn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', function() {
+      localStorage.clear();
+      window.location.href = '/app/login.html';
+    });
+  }
+  
+  // =================== GET SERVICE ID ===================
+  var urlParams = new URLSearchParams(window.location.search);
+  var serviceId = urlParams.get('id');
+  
+  if (!serviceId) {
+    showErrorState('لم يتم تحديد الخدمة', 'يرجى اختيار خدمة من صفحة الخدمات');
+    return;
+  }
+  
   var currentService = null;
   
-  document.addEventListener('DOMContentLoaded', function() {
-    // Require authentication
-    if (!MashriqGuards.requireAuth()) {
-      return; // Redirecting to login
-    }
-    
-    // Initialize app components
-    MashriqApp.init('order');
-    
-    // Get service ID from URL
-    var urlParams = new URLSearchParams(window.location.search);
-    var serviceId = urlParams.get('id');
-    
-    if (!serviceId) {
-      MashriqApp.showToast('لم يتم تحديد الخدمة', 'error');
-      setTimeout(function() {
-        window.location.href = '/app/services.html';
-      }, 1500);
-      return;
-    }
-    
-    // Load service details
-    loadServiceDetails(serviceId);
-    
-    // Setup order form
-    setupOrderForm();
-  });
+  // Load service details
+  loadServiceDetails(serviceId);
   
-  /**
-   * Load service details from API
-   */
-  async function loadServiceDetails(serviceId) {
-    var serviceContainer = document.getElementById('service-details');
-    var summaryContainer = document.getElementById('order-summary-content');
+  // =================== LOAD SERVICE ===================
+  
+  async function loadServiceDetails(id) {
+    var container = document.getElementById('order-content');
     
     try {
-      MashriqApp.showLoading(true);
+      var response = await fetch('/api/services/' + id, {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
       
-      var response = await MashriqAPI.get('/services/' + serviceId);
-      
-      if (response.success && response.service) {
-        currentService = response.service;
-        
-        // Check if user is trying to order their own service
-        var user = MashriqAuth.getUser();
-        var sellerId = currentService.sellerId;
-        var userId = user ? (user.id || user._id) : null;
-        
-        if (userId && (sellerId === userId || String(sellerId) === String(userId))) {
-          MashriqApp.showToast('لا يمكنك شراء خدمتك الخاصة', 'warning');
-          setTimeout(function() {
-            window.location.href = '/app/services.html';
-          }, 1500);
-          return;
-        }
-        
-        renderServiceDetails(currentService, response.seller);
-        renderOrderSummary(currentService);
-        
-      } else {
-        throw new Error(response.message || 'الخدمة غير موجودة');
-      }
-    } catch (error) {
-      console.error('Error loading service:', error);
-      MashriqApp.showToast(error.message || 'حدث خطأ في تحميل الخدمة', 'error');
-      
-      if (serviceContainer) {
-        serviceContainer.innerHTML = '<div class="empty-state">' +
-          '<div class="empty-state-icon">❌</div>' +
-          '<h3 class="empty-state-title">الخدمة غير موجودة</h3>' +
-          '<p class="empty-state-text">' + error.message + '</p>' +
-          '<a href="/app/services.html" class="btn btn-primary">العودة للخدمات</a>' +
-        '</div>';
-      }
-    } finally {
-      MashriqApp.showLoading(false);
-    }
-  }
-  
-  /**
-   * Render service details
-   */
-  function renderServiceDetails(service, seller) {
-    var container = document.getElementById('service-details');
-    if (!container) return;
-    
-    var imageUrl = service.image || 'https://via.placeholder.com/600x400?text=خدمة';
-    var sellerName = (seller && seller.fullName) ? seller.fullName : (service.sellerName || 'بائع');
-    var price = MashriqApp.formatCurrency(service.price);
-    var deliveryTime = service.deliveryTime || 3;
-    var revisions = service.revisions || 1;
-    
-    container.innerHTML = '<div class="service-detail-header">' +
-      '<img src="' + imageUrl + '" alt="' + service.title + '" class="service-detail-image" onerror="this.src=\'https://via.placeholder.com/600x400?text=خدمة\'">' +
-      '<div class="service-detail-info">' +
-        '<h1 class="service-detail-title">' + service.title + '</h1>' +
-        '<div class="service-detail-seller"><span>بواسطة: <strong>' + sellerName + '</strong></span></div>' +
-        '<div class="service-detail-price">' + price + '</div>' +
-      '</div>' +
-    '</div>' +
-    '<div class="service-detail-section">' +
-      '<h3>وصف الخدمة</h3>' +
-      '<p>' + service.description + '</p>' +
-    '</div>' +
-    '<div class="service-detail-section">' +
-      '<h3>تفاصيل الخدمة</h3>' +
-      '<ul class="service-detail-list">' +
-        '<li>⏱️ مدة التسليم: ' + deliveryTime + ' أيام</li>' +
-        '<li>🔄 عدد التعديلات: ' + revisions + '</li>' +
-      '</ul>' +
-    '</div>' +
-    (service.requirements ? '<div class="service-detail-section"><h3>متطلبات البائع</h3><p>' + service.requirements + '</p></div>' : '');
-  }
-  
-  /**
-   * Render order summary sidebar
-   */
-  function renderOrderSummary(service) {
-    var container = document.getElementById('order-summary-content');
-    if (!container) return;
-    
-    var imageUrl = service.image || 'https://via.placeholder.com/80?text=خدمة';
-    var sellerName = service.sellerName || 'بائع';
-    var price = MashriqApp.formatCurrency(service.price);
-    
-    container.innerHTML = '<div class="order-service-info">' +
-      '<img src="' + imageUrl + '" alt="' + service.title + '" class="order-service-image" onerror="this.src=\'https://via.placeholder.com/80?text=خدمة\'">' +
-      '<div class="order-service-details">' +
-        '<h4>' + service.title + '</h4>' +
-        '<p>' + sellerName + '</p>' +
-      '</div>' +
-    '</div>' +
-    '<div class="order-price-breakdown">' +
-      '<div class="order-price-row"><span>سعر الخدمة</span><span>' + price + '</span></div>' +
-      '<div class="order-price-row"><span>رسوم المنصة</span><span>' + MashriqApp.formatCurrency(0) + '</span></div>' +
-      '<div class="order-price-row total"><span>الإجمالي</span><span class="price">' + price + '</span></div>' +
-    '</div>';
-  }
-  
-  /**
-   * Setup order form submission
-   */
-  function setupOrderForm() {
-    var form = document.getElementById('order-form');
-    if (!form) return;
-    
-    form.addEventListener('submit', async function(e) {
-      e.preventDefault();
-      
-      if (!currentService) {
-        MashriqApp.showToast('يرجى الانتظار حتى يتم تحميل الخدمة', 'error');
+      // Handle 401
+      if (response.status === 401) {
+        localStorage.clear();
+        window.location.href = '/app/login.html';
         return;
       }
       
-      var requirements = document.getElementById('buyer-requirements');
-      var requirementsValue = requirements ? requirements.value.trim() : '';
-      var submitBtn = form.querySelector('button[type="submit"]');
-      var originalText = submitBtn.textContent;
+      // Handle 404
+      if (response.status === 404) {
+        showErrorState('الخدمة غير موجودة', 'ربما تم حذفها أو أن الرابط غير صحيح');
+        return;
+      }
       
-      try {
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'جاري إنشاء الطلب...';
-        MashriqApp.showLoading(true);
+      var data = await response.json();
+      
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || 'فشل تحميل تفاصيل الخدمة');
+      }
+      
+      if (!data.service) {
+        showErrorState('الخدمة غير موجودة', 'لم يتم العثور على الخدمة المطلوبة');
+        return;
+      }
+      
+      currentService = data.service;
+      
+      // Check if user is buying their own service
+      var sellerId = currentService.sellerId || (currentService.seller && currentService.seller._id);
+      var userId = currentUser ? (currentUser.id || currentUser._id) : null;
+      
+      if (userId && String(sellerId) === String(userId)) {
+        showErrorState('لا يمكنك شراء خدمتك', 'لا يمكنك طلب خدمة قمت بإنشائها بنفسك');
+        return;
+      }
+      
+      // Render the order page
+      renderOrderPage(currentService, data.seller);
+      
+    } catch (error) {
+      console.error('Error loading service:', error);
+      
+      if (error.name === 'TypeError' || error.message.includes('fetch')) {
+        showErrorState('تعذر الاتصال بالخادم', 'تحقق من اتصالك بالإنترنت وحاول مرة أخرى');
+      } else {
+        showErrorState('حدث خطأ', error.message || 'تعذر تحميل تفاصيل الخدمة');
+      }
+    }
+  }
+  
+  // =================== RENDER FUNCTIONS ===================
+  
+  function showErrorState(title, message) {
+    var container = document.getElementById('order-content');
+    container.innerHTML = '<div class="error-state">' +
+      '<div class="error-state-icon">⚠️</div>' +
+      '<h3 class="error-state-title">' + escapeHtml(title) + '</h3>' +
+      '<p class="error-state-text">' + escapeHtml(message) + '</p>' +
+      '<a href="/app/services.html" class="btn btn-primary">العودة للخدمات</a>' +
+    '</div>';
+  }
+  
+  function showSuccessState() {
+    var container = document.getElementById('order-content');
+    container.innerHTML = '<div class="success-state">' +
+      '<div class="success-state-icon">✅</div>' +
+      '<h3 class="success-state-title">تم إرسال طلبك بنجاح!</h3>' +
+      '<p class="success-state-text">سيتواصل معك البائع قريباً لبدء العمل على طلبك</p>' +
+      '<a href="/app/services.html" class="btn btn-primary">استعرض خدمات أخرى</a>' +
+    '</div>';
+  }
+  
+  function renderOrderPage(service, seller) {
+    var container = document.getElementById('order-content');
+    var sellerName = (seller && seller.fullName) ? seller.fullName : (service.sellerName || 'بائع');
+    var category = getCategoryLabel(service.category);
+    var price = formatPrice(service.price);
+    var delivery = service.deliveryTime || 3;
+    var imageUrl = service.image || 'https://via.placeholder.com/100x80/252532/ff6b35?text=خدمة';
+    var description = service.description || 'لا يوجد وصف متاح';
+    
+    container.innerHTML = '<div class="order-layout">' +
+      // Left column - Order form
+      '<div class="order-form-section">' +
+        '<h2 class="order-form-title">تفاصيل الطلب</h2>' +
         
-        var serviceId = currentService.id || currentService._id;
-        var response = await MashriqAPI.post('/orders', {
-          serviceId: serviceId,
-          buyerRequirements: requirementsValue
-        });
+        // Service details
+        '<div style="margin-bottom: var(--space-xl);">' +
+          '<h3 style="font-size: var(--font-size-lg); margin-bottom: var(--space-md);">' + escapeHtml(service.title) + '</h3>' +
+          '<p style="color: var(--color-text-secondary); line-height: 1.7;">' + escapeHtml(description) + '</p>' +
+        '</div>' +
         
-        if (response.success) {
-          MashriqApp.showToast(response.message || 'تم إنشاء الطلب بنجاح!', 'success');
-          setTimeout(function() {
-            window.location.href = '/app/services.html';
-          }, 1500);
-        } else {
-          throw new Error(response.message || 'فشل إنشاء الطلب');
-        }
-      } catch (error) {
-        MashriqApp.showToast(error.message || 'حدث خطأ أثناء إنشاء الطلب', 'error');
+        // Order form
+        '<form id="order-form">' +
+          '<div id="form-message" class="inline-message"></div>' +
+          
+          '<div class="form-group">' +
+            '<label class="form-label">اشرح للمستقل تفاصيل طلبك</label>' +
+            '<div class="textarea-wrapper">' +
+              '<textarea id="requirements" class="form-input" rows="6" ' +
+                'placeholder="اكتب هنا تفاصيل ما تحتاجه بوضوح. كلما كانت التفاصيل أكثر دقة، كانت النتيجة أفضل..."></textarea>' +
+              '<span id="char-counter" class="textarea-counter">0 / ' + MIN_REQUIREMENTS_LENGTH + ' حرف على الأقل</span>' +
+            '</div>' +
+          '</div>' +
+          
+          '<button type="submit" id="submit-btn" class="btn btn-primary btn-lg btn-block" disabled>' +
+            'تأكيد الطلب - ' + price +
+          '</button>' +
+          
+          '<p style="text-align: center; margin-top: var(--space-md); font-size: var(--font-size-sm); color: var(--color-text-muted);">' +
+            'بالضغط على تأكيد الطلب، أنت توافق على شروط الاستخدام' +
+          '</p>' +
+        '</form>' +
+      '</div>' +
+      
+      // Right column - Order summary
+      '<aside class="service-summary">' +
+        '<div class="service-summary-header">' +
+          '<img src="' + escapeHtml(imageUrl) + '" alt="' + escapeHtml(service.title) + '" class="service-summary-image" ' +
+            'onerror="this.src=\'https://via.placeholder.com/100x80/252532/ff6b35?text=خدمة\'">' +
+          '<div class="service-summary-info">' +
+            '<span class="service-summary-category">' + category + '</span>' +
+            '<h4 class="service-summary-title">' + escapeHtml(service.title) + '</h4>' +
+            '<p class="service-summary-seller">بواسطة: ' + escapeHtml(sellerName) + '</p>' +
+          '</div>' +
+        '</div>' +
+        
+        '<div class="service-summary-details">' +
+          '<div class="service-summary-row">' +
+            '<span>سعر الخدمة</span>' +
+            '<span>' + price + '</span>' +
+          '</div>' +
+          '<div class="service-summary-row">' +
+            '<span>مدة التسليم</span>' +
+            '<span>' + delivery + ' أيام</span>' +
+          '</div>' +
+          '<div class="service-summary-row">' +
+            '<span>رسوم المنصة</span>' +
+            '<span>$0.00</span>' +
+          '</div>' +
+          '<div class="service-summary-row total">' +
+            '<span>الإجمالي</span>' +
+            '<span class="value">' + price + '</span>' +
+          '</div>' +
+        '</div>' +
+      '</aside>' +
+    '</div>';
+    
+    // Setup form handlers
+    setupOrderForm();
+  }
+  
+  // =================== ORDER FORM ===================
+  
+  function setupOrderForm() {
+    var form = document.getElementById('order-form');
+    var textarea = document.getElementById('requirements');
+    var counter = document.getElementById('char-counter');
+    var submitBtn = document.getElementById('submit-btn');
+    var formMessage = document.getElementById('form-message');
+    var isSubmitting = false;
+    
+    // Character counter
+    textarea.addEventListener('input', function() {
+      var length = textarea.value.trim().length;
+      counter.textContent = length + ' / ' + MIN_REQUIREMENTS_LENGTH + ' حرف على الأقل';
+      
+      if (length >= MIN_REQUIREMENTS_LENGTH) {
+        counter.className = 'textarea-counter';
         submitBtn.disabled = false;
-        submitBtn.textContent = originalText;
-      } finally {
-        MashriqApp.showLoading(false);
+      } else if (length >= MIN_REQUIREMENTS_LENGTH * 0.5) {
+        counter.className = 'textarea-counter warning';
+        submitBtn.disabled = true;
+      } else {
+        counter.className = 'textarea-counter';
+        submitBtn.disabled = true;
       }
     });
+    
+    // Form submission
+    form.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      if (isSubmitting) return;
+      
+      var requirements = textarea.value.trim();
+      
+      // Validation
+      if (requirements.length < MIN_REQUIREMENTS_LENGTH) {
+        showFormMessage('يرجى كتابة ' + MIN_REQUIREMENTS_LENGTH + ' حرف على الأقل لتوضيح متطلباتك', 'error');
+        return;
+      }
+      
+      if (!currentService) {
+        showFormMessage('حدث خطأ. يرجى تحديث الصفحة', 'error');
+        return;
+      }
+      
+      // Start submission
+      isSubmitting = true;
+      submitBtn.disabled = true;
+      submitBtn.classList.add('btn-loading');
+      hideFormMessage();
+      
+      try {
+        var response = await fetch('/api/orders', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify({
+            serviceId: currentService.id || currentService._id,
+            buyerRequirements: requirements
+          })
+        });
+        
+        // Handle 401
+        if (response.status === 401) {
+          localStorage.clear();
+          window.location.href = '/app/login.html';
+          return;
+        }
+        
+        var data = await response.json();
+        
+        if (!response.ok || !data.success) {
+          throw new Error(data.message || 'فشل إنشاء الطلب');
+        }
+        
+        // Success!
+        showSuccessState();
+        
+      } catch (error) {
+        isSubmitting = false;
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('btn-loading');
+        
+        if (error.name === 'TypeError' || error.message.includes('fetch')) {
+          showFormMessage('تعذر الاتصال بالخادم. تحقق من اتصالك بالإنترنت', 'error');
+        } else {
+          showFormMessage(error.message || 'حدث خطأ أثناء إنشاء الطلب', 'error');
+        }
+      }
+    });
+    
+    function showFormMessage(message, type) {
+      formMessage.textContent = message;
+      formMessage.className = 'inline-message visible ' + type;
+    }
+    
+    function hideFormMessage() {
+      formMessage.className = 'inline-message';
+    }
   }
+  
+  // =================== HELPERS ===================
+  
+  function getCategoryLabel(cat) {
+    var labels = {
+      'design': 'تصميم',
+      'development': 'برمجة',
+      'writing': 'كتابة',
+      'marketing': 'تسويق',
+      'video': 'فيديو',
+      'translation': 'ترجمة',
+      'other': 'أخرى'
+    };
+    return labels[cat] || cat || 'أخرى';
+  }
+  
+  function formatPrice(price) {
+    var num = Number(price) || 0;
+    return '$' + num.toFixed(2);
+  }
+  
+  function escapeHtml(text) {
+    if (!text) return '';
+    var div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+  
 })();

@@ -6,143 +6,252 @@
   <meta name="description" content="طلب خدمة على منصة مشرق - منصة الخدمات الرقمية العربية">
   <title>طلب خدمة | مشرق</title>
   <link rel="icon" type="image/png" href="/logo.png">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/app/assets/css/main.css">
   <style>
-    /* Order page specific styles */
-    .service-detail-header {
-      display: flex;
-      gap: var(--space-xl);
-      margin-bottom: var(--space-2xl);
+    /* Order Page Specific Styles */
+    .order-layout {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: var(--space-2xl);
+      align-items: start;
     }
     
-    .service-detail-image {
-      width: 300px;
-      height: 200px;
-      object-fit: cover;
+    @media (max-width: 900px) {
+      .order-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    /* Loading State */
+    .loading-state {
+      text-align: center;
+      padding: var(--space-3xl) var(--space-xl);
+    }
+    .loading-state .loading-spinner {
+      margin: 0 auto var(--space-lg);
+    }
+    .loading-state-text {
+      color: var(--color-text-muted);
+      font-size: var(--font-size-lg);
+    }
+    
+    /* Error State */
+    .error-state {
+      text-align: center;
+      padding: var(--space-3xl) var(--space-xl);
+      background: rgba(239, 68, 68, 0.05);
+      border: 1px solid var(--color-error);
       border-radius: var(--radius-lg);
-      flex-shrink: 0;
     }
-    
-    .service-detail-info {
-      flex: 1;
+    .error-state-icon { font-size: 4rem; margin-bottom: var(--space-lg); }
+    .error-state-title {
+      font-size: var(--font-size-xl);
+      margin-bottom: var(--space-sm);
+      color: var(--color-error);
     }
-    
-    .service-detail-title {
-      font-size: var(--font-size-2xl);
-      margin-bottom: var(--space-md);
-    }
-    
-    .service-detail-seller {
-      color: var(--color-text-secondary);
-      margin-bottom: var(--space-lg);
-    }
-    
-    .service-detail-price {
-      font-size: var(--font-size-3xl);
-      font-weight: var(--font-weight-bold);
-      color: var(--color-accent);
-    }
-    
-    .service-detail-section {
+    .error-state-text {
+      color: var(--color-text-muted);
       margin-bottom: var(--space-xl);
     }
     
-    .service-detail-section h3 {
+    /* Success State */
+    .success-state {
+      text-align: center;
+      padding: var(--space-3xl) var(--space-xl);
+      background: rgba(34, 197, 94, 0.05);
+      border: 1px solid var(--color-success);
+      border-radius: var(--radius-lg);
+    }
+    .success-state-icon { font-size: 4rem; margin-bottom: var(--space-lg); }
+    .success-state-title {
+      font-size: var(--font-size-xl);
+      margin-bottom: var(--space-sm);
+      color: var(--color-success);
+    }
+    .success-state-text {
+      color: var(--color-text-muted);
+      margin-bottom: var(--space-xl);
+    }
+    
+    /* Service Card (Order Summary) */
+    .service-summary {
+      background: var(--color-bg-card);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-xl);
+    }
+    .service-summary-header {
+      display: flex;
+      gap: var(--space-lg);
+      margin-bottom: var(--space-lg);
+      padding-bottom: var(--space-lg);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .service-summary-image {
+      width: 100px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: var(--radius-md);
+      flex-shrink: 0;
+    }
+    .service-summary-info { flex: 1; }
+    .service-summary-category {
+      display: inline-block;
+      padding: var(--space-xs) var(--space-sm);
+      background: var(--color-bg-tertiary);
+      border-radius: var(--radius-sm);
+      font-size: var(--font-size-xs);
+      color: var(--color-accent);
+      margin-bottom: var(--space-sm);
+    }
+    .service-summary-title {
       font-size: var(--font-size-lg);
-      margin-bottom: var(--space-md);
+      font-weight: var(--font-weight-semibold);
+      margin-bottom: var(--space-xs);
+    }
+    .service-summary-seller {
+      font-size: var(--font-size-sm);
+      color: var(--color-text-muted);
+    }
+    .service-summary-details {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+    }
+    .service-summary-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: var(--font-size-sm);
+      color: var(--color-text-secondary);
+    }
+    .service-summary-row.total {
+      font-size: var(--font-size-lg);
+      font-weight: var(--font-weight-bold);
       color: var(--color-text-primary);
+      padding-top: var(--space-md);
+      margin-top: var(--space-sm);
+      border-top: 1px solid var(--color-border);
+    }
+    .service-summary-row.total .value {
+      color: var(--color-accent);
     }
     
-    .service-detail-section p {
-      color: var(--color-text-secondary);
-      line-height: var(--line-height-relaxed);
+    /* Order Form Section */
+    .order-form-section {
+      background: var(--color-bg-card);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-xl);
+    }
+    .order-form-title {
+      font-size: var(--font-size-xl);
+      margin-bottom: var(--space-lg);
     }
     
-    .service-detail-list {
-      list-style: none;
-      padding: 0;
+    /* Textarea with counter */
+    .textarea-wrapper {
+      position: relative;
+    }
+    .textarea-counter {
+      position: absolute;
+      bottom: var(--space-sm);
+      left: var(--space-md);
+      font-size: var(--font-size-xs);
+      color: var(--color-text-muted);
+    }
+    .textarea-counter.warning { color: var(--color-warning); }
+    .textarea-counter.error { color: var(--color-error); }
+    
+    /* Inline messages */
+    .inline-message {
+      padding: var(--space-md);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--space-lg);
+      display: none;
+      text-align: center;
+    }
+    .inline-message.visible { display: block; }
+    .inline-message.error {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid var(--color-error);
+      color: var(--color-error);
+    }
+    .inline-message.success {
+      background: rgba(34, 197, 94, 0.1);
+      border: 1px solid var(--color-success);
+      color: var(--color-success);
     }
     
-    .service-detail-list li {
-      padding: var(--space-sm) 0;
-      color: var(--color-text-secondary);
+    /* Button loading */
+    .btn-loading {
+      position: relative;
+      color: transparent !important;
     }
-    
-    @media (max-width: 768px) {
-      .service-detail-header {
-        flex-direction: column;
-      }
-      
-      .service-detail-image {
-        width: 100%;
-        height: 200px;
-      }
+    .btn-loading::after {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      top: 50%;
+      left: 50%;
+      margin-top: -10px;
+      margin-left: -10px;
     }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
   <!-- Navbar -->
-  <header id="navbar" class="navbar"></header>
-
-  <main class="main-content order-page">
+  <header class="navbar">
     <div class="container">
-      <div class="order-container">
-        <!-- Service Details & Order Form -->
-        <div class="order-form-section">
-          <h2 style="margin-bottom: var(--space-xl);">تفاصيل الخدمة</h2>
-          
-          <!-- Service Details Container -->
-          <div id="service-details">
-            <div class="loading-spinner"></div>
-          </div>
-          
-          <!-- Order Form -->
-          <form id="order-form" style="margin-top: var(--space-2xl); padding-top: var(--space-xl); border-top: 1px solid var(--color-border);">
-            <h3 style="margin-bottom: var(--space-lg);">متطلباتك</h3>
-            
-            <div class="form-group">
-              <label for="buyer-requirements" class="form-label">أخبر البائع بمتطلباتك</label>
-              <textarea 
-                id="buyer-requirements" 
-                class="form-input" 
-                placeholder="اشرح بالتفصيل ما تحتاجه من هذه الخدمة..."
-                rows="5"
-              ></textarea>
-              <p class="form-helper">كلما كانت المتطلبات واضحة، كانت النتيجة أفضل</p>
-            </div>
+      <a href="/app/index.html" class="navbar-brand">
+        <img src="/logo.png" alt="مشرق" class="navbar-logo">
+        <span class="navbar-title">مشرق</span>
+      </a>
+      <nav>
+        <ul class="navbar-nav">
+          <li><a href="/app/services.html" class="nav-link">الخدمات</a></li>
+          <li><button id="logout-btn" class="btn btn-ghost">تسجيل الخروج</button></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
 
-            <button type="submit" class="btn btn-primary btn-lg btn-block">
-              تأكيد الطلب
-            </button>
-          </form>
-        </div>
-
-        <!-- Order Summary Sidebar -->
-        <aside class="order-summary">
-          <h3 class="order-summary-title">ملخص الطلب</h3>
-          <div id="order-summary-content">
-            <div class="loading-spinner"></div>
-          </div>
-        </aside>
-      </div>
-      
+  <main class="main-content">
+    <div class="container">
       <!-- Back Link -->
-      <div style="margin-top: var(--space-2xl);">
-        <a href="/app/services.html" class="btn btn-ghost">
+      <div style="margin-bottom: var(--space-xl);">
+        <a href="/app/services.html" class="btn btn-ghost" style="padding-right: 0;">
           ← العودة للخدمات
         </a>
+      </div>
+
+      <!-- Main Content Container -->
+      <div id="order-content">
+        <!-- Will be populated by JavaScript -->
+        <div class="loading-state">
+          <div class="loading-spinner"></div>
+          <p class="loading-state-text">جارٍ تحميل تفاصيل الخدمة...</p>
+        </div>
       </div>
     </div>
   </main>
 
   <!-- Footer -->
-  <footer id="footer" class="footer"></footer>
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <p class="footer-text">© 2024 مشرق - جميع الحقوق محفوظة</p>
+      </div>
+    </div>
+  </footer>
 
   <!-- Scripts -->
-  <script src="/app/js/api.js"></script>
-  <script src="/app/js/auth.js"></script>
-  <script src="/app/js/guards.js"></script>
-  <script src="/app/js/app.js"></script>
   <script src="/app/js/order.js"></script>
 </body>
 </html>
