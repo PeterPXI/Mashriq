@@ -326,6 +326,93 @@ function initOrderPage() {
 }
 
 // ============================================================
+// REGISTER PAGE
+// ============================================================
+
+function initRegisterPage() {
+    const registerForm = document.getElementById('registerForm');
+    if (!registerForm) return;
+    
+    const fullNameInput = document.getElementById('fullName');
+    const usernameInput = document.getElementById('username');
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const errorMessage = document.getElementById('errorMessage');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    // Redirect if already logged in
+    if (getToken()) {
+        window.location.href = 'services.html';
+        return;
+    }
+    
+    function showError(message) {
+        errorMessage.textContent = message;
+        errorMessage.hidden = false;
+    }
+    
+    function hideError() {
+        errorMessage.hidden = true;
+    }
+    
+    function setLoading(loading) {
+        submitBtn.disabled = loading;
+        submitBtn.textContent = loading ? 'جاري إنشاء الحساب...' : 'إنشاء الحساب';
+    }
+    
+    async function handleRegister(event) {
+        event.preventDefault();
+        hideError();
+        
+        const fullName = fullNameInput.value.trim();
+        const username = usernameInput.value.trim();
+        const email = emailInput.value.trim();
+        const password = passwordInput.value;
+        
+        // Validation
+        if (!fullName || !username || !email || !password) {
+            showError('يرجى ملء جميع الحقول');
+            return;
+        }
+        
+        if (password.length < 6) {
+            showError('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
+            return;
+        }
+        
+        setLoading(true);
+        
+        try {
+            const response = await fetch(`${API_BASE}/auth/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fullName, username, email, password })
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok || !data.success) {
+                throw new Error(data.message || 'حدث خطأ في إنشاء الحساب');
+            }
+            
+            // Save token and user
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('user', JSON.stringify(data.user));
+            
+            // Redirect to services
+            window.location.href = 'services.html';
+            
+        } catch (error) {
+            showError(error.message);
+        } finally {
+            setLoading(false);
+        }
+    }
+    
+    registerForm.addEventListener('submit', handleRegister);
+}
+
+// ============================================================
 // UTILITIES
 // ============================================================
 
@@ -345,6 +432,7 @@ function escapeHtml(text) {
 
 document.addEventListener('DOMContentLoaded', () => {
     initLoginPage();
+    initRegisterPage();
     initServicesPage();
     initOrderPage();
 });
