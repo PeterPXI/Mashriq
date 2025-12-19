@@ -22,6 +22,12 @@ const Order = require('./models/Order');
 const { ORDER_STATUSES } = require('./models/Order');
 const Review = require('./models/Review');
 
+// Routes
+const orderRoutes = require('./routes/orderRoutes');
+const disputeRoutes = require('./routes/disputeRoutes');
+const chatRoutes = require('./routes/chatRoutes');
+const reviewRoutes = require('./routes/reviewRoutes');
+
 const app = express();
 const JWT_SECRET = process.env.JWT_SECRET || 'mashriq_simple_secret';
 
@@ -80,7 +86,7 @@ const authenticateToken = async (req, res, next) => {
       token = req.headers.authorization.split(' ')[1];
       const decoded = jwt.verify(token, JWT_SECRET);
       
-      req.user = await User.findById(decoded.id).select('-password');
+      req.user = await User.findById(decoded.id).select('-passwordHash');
       
       if (!req.user) {
         return res.status(401).json({ success: false, message: 'المستخدم غير موجود' });
@@ -102,7 +108,8 @@ const requireSeller = (req, res, next) => {
     return res.status(401).json({ success: false, message: 'يجب تسجيل الدخول أولاً' });
   }
   
-  if (!req.user.isSeller && req.user.role !== USER_ROLES.SELLER && req.user.role !== USER_ROLES.ADMIN) {
+  // User must have SELLER or ADMIN role to perform seller actions
+  if (req.user.role !== USER_ROLES.SELLER && req.user.role !== USER_ROLES.ADMIN) {
     return res.status(403).json({ 
       success: false, 
       message: 'يجب تفعيل وضع البائع أولاً للقيام بهذا الإجراء',
@@ -136,14 +143,19 @@ app.get('/api/health', (req, res) => {
 // Register
 app.post('/api/auth/register', async (req, res) => {
   try {
-    const { name, username, email, password, phone, grade, specialization } = req.body;
+    const { fullName, username, email, password } = req.body;
     
-    // Validation handled by Mongoose usually, but early check good
-    if (!name || !username || !email || !password) {
+    // Validate required fields
+    if (!fullName || !username || !email || !password) {
       return res.status(400).json({ success: false, message: 'جميع الحقول المطلوبة يجب ملؤها' });
     }
+    
+    // Validate password length
+    if (password.length < 6) {
+      return res.status(400).json({ success: false, message: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' });
+    }
 
-    // Check existing
+    // Check if email or username already exists
     const userExists = await User.findOne({ 
         $or: [{ email: email.toLowerCase() }, { username: username.toLowerCase() }] 
     });
@@ -152,31 +164,29 @@ app.post('/api/auth/register', async (req, res) => {
         return res.status(400).json({ success: false, message: 'البريد الإلكتروني أو اسم المستخدم مستخدم بالفعل' });
     }
 
-    // Create user (password hashing handled in pre-save hook)
+    // Create user (password hashing handled in pre-save hook via passwordHash field)
     const user = await User.create({
-        name,
-        username,
+        fullName,
+        username: username.toLowerCase(),
         email: email.toLowerCase(),
-        password,
-        phone,
-        grade,
-        specialization,
-        avatar: name.charAt(0).toUpperCase()
+        passwordHash: password  // Will be hashed in pre-save hook
     });
 
-    // Generate token
+    // Generate JWT token
     const token = jwt.sign({ id: user._id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
+    
+    console.log(`🎉 New user registered: ${user.fullName} (${user.email})`);
 
     res.status(201).json({
       success: true,
       message: 'تم إنشاء الحساب بنجاح! مرحباً بك 🎉',
       user: {
           id: user._id,
-          name: user.name,
+          fullName: user.fullName,
           username: user.username,
           email: user.email,
-          avatar: user.avatar,
-          role: user.isDemo ? 'demo' : 'user'
+          avatarUrl: user.avatarUrl,
+          role: user.role
       },
       token
     });
@@ -196,20 +206,30 @@ app.post('/api/auth/login', async (req, res) => {
       return res.status(400).json({ success: false, message: 'يرجى إدخال البريد الإلكتروني وكلمة المرور' });
     }
     
-    // Find user
-    const user = await User.findOne({ email: email.toLowerCase() });
+    // Find user by email
+    const user = await User.findByEmail(email);
     
     if (!user) {
         return res.status(401).json({ success: false, message: 'البريد الإلكتروني أو كلمة المرور غير صحيحة' });
     }
     
-    // Check password
+    // Check if account is active
+    if (!user.isActive) {
+        return res.status(401).json({ success: false, message: 'هذا الحساب معطّل' });
+    }
+    
+    // Verify password
     const isMatch = await user.matchPassword(password);
     
     if (!isMatch) {
         return res.status(401).json({ success: false, message: 'البريد الإلكتروني أو كلمة المرور غير صحيحة' });
     }
     
+    // Update last active timestamp
+    user.lastActiveAt = Date.now();
+    await user.save();
+    
+    // Generate JWT token
     const token = jwt.sign({ id: user._id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
     
     res.json({
@@ -217,14 +237,12 @@ app.post('/api/auth/login', async (req, res) => {
       message: 'تم تسجيل الدخول بنجاح! مرحباً بك 👋',
       user: {
           id: user._id,
-          name: user.name,
+          fullName: user.fullName,
           username: user.username,
           email: user.email,
-          avatar: user.avatar,
-          grade: user.grade,
-          specialization: user.specialization,
-          sales: user.sales,
-          rating: user.rating
+          avatarUrl: user.avatarUrl,
+          bio: user.bio,
+          role: user.role
       },
       token
     });
@@ -237,22 +255,21 @@ app.post('/api/auth/login', async (req, res) => {
 
 // Verify Token & Get Current User
 app.get('/api/auth/me', authenticateToken, async (req, res) => {
-    // req.user is already fetched in middleware
+    // req.user is already fetched in middleware (excludes passwordHash)
     const user = req.user;
     
+    // NOTE: Trust fields are NEVER returned in API responses
     res.json({ 
         success: true, 
         user: {
             id: user._id,
-            name: user.name,
+            fullName: user.fullName,
             username: user.username,
             email: user.email,
-            phone: user.phone,
-            grade: user.grade,
-            specialization: user.specialization,
-            avatar: user.avatar,
-            sales: user.sales,
-            rating: user.rating,
+            bio: user.bio,
+            avatarUrl: user.avatarUrl,
+            role: user.role,
+            isEmailVerified: user.isEmailVerified,
             createdAt: user.createdAt
         } 
     });
@@ -261,16 +278,17 @@ app.get('/api/auth/me', authenticateToken, async (req, res) => {
 // Update User Profile
 app.put('/api/auth/profile', authenticateToken, async (req, res) => {
   try {
-    const { name, phone, grade, specialization } = req.body;
+    const { fullName, bio, avatarUrl } = req.body;
     const user = await User.findById(req.user.id);
     
-    if (name) {
-        user.name = name;
-        user.avatar = name.charAt(0).toUpperCase();
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'المستخدم غير موجود' });
     }
-    if (phone) user.phone = phone;
-    if (grade) user.grade = grade;
-    if (specialization) user.specialization = specialization;
+    
+    // Update allowed profile fields
+    if (fullName) user.fullName = fullName;
+    if (bio !== undefined) user.bio = bio;
+    if (avatarUrl !== undefined) user.avatarUrl = avatarUrl;
     
     await user.save();
     
@@ -279,12 +297,12 @@ app.put('/api/auth/profile', authenticateToken, async (req, res) => {
       message: 'تم تحديث الملف الشخصي بنجاح',
       user: {
           id: user._id,
-          name: user.name,
+          fullName: user.fullName,
+          username: user.username,
           email: user.email,
-          phone: user.phone,
-          grade: user.grade,
-          specialization: user.specialization,
-          avatar: user.avatar
+          bio: user.bio,
+          avatarUrl: user.avatarUrl,
+          role: user.role
       }
     });
     
@@ -309,14 +327,18 @@ app.put('/api/auth/password', authenticateToken, async (req, res) => {
     
     const user = await User.findById(req.user.id);
     
-    // Check current
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'المستخدم غير موجود' });
+    }
+    
+    // Verify current password
     const isMatch = await user.matchPassword(currentPassword);
     if (!isMatch) {
        return res.status(401).json({ success: false, message: 'كلمة المرور الحالية غير صحيحة' });
     }
     
-    // Update (pre-save hook will hash it)
-    user.password = newPassword;
+    // Update password (pre-save hook will hash it)
+    user.passwordHash = newPassword;
     await user.save();
     
     res.json({ success: true, message: 'تم تغيير كلمة المرور بنجاح' });
@@ -332,25 +354,29 @@ app.post('/api/auth/activate-seller', authenticateToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
     
-    if (user.isSeller) {
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'المستخدم غير موجود' });
+    }
+    
+    // Check if already a seller
+    if (user.role === USER_ROLES.SELLER || user.role === USER_ROLES.ADMIN) {
       return res.status(400).json({ success: false, message: 'أنت بائع بالفعل' });
     }
     
-    user.isSeller = true;
+    // Upgrade role to seller
     user.role = USER_ROLES.SELLER;
-    user.sellerActivatedAt = Date.now();
     await user.save();
     
-    console.log(`🎉 New seller activated: ${user.name} (${user.email})`);
+    console.log(`🎉 New seller activated: ${user.fullName} (${user.email})`);
     
     res.json({ 
       success: true, 
       message: 'تم تفعيل وضع البائع بنجاح! يمكنك الآن إضافة خدماتك 🎉',
       user: {
         id: user._id,
-        name: user.name,
+        fullName: user.fullName,
+        username: user.username,
         email: user.email,
-        isSeller: user.isSeller,
         role: user.role
       }
     });
@@ -401,8 +427,8 @@ app.get('/api/services/:id', async (req, res) => {
       return res.status(404).json({ success: false, message: 'الخدمة غير موجودة' });
     }
     
-    // Get seller info
-    const seller = await User.findById(service.sellerId).select('name username avatar rating reviewsCount bio');
+    // Get seller info (only public fields, never trust metrics)
+    const seller = await User.findById(service.sellerId).select('fullName username avatarUrl bio');
     
     res.json({ 
       success: true, 
@@ -437,10 +463,10 @@ app.post('/api/services', authenticateToken, requireSeller, async (req, res) => 
       revisions: revisions || 1,
       requirements: requirements || '',
       sellerId: req.user.id,
-      sellerName: req.user.name
+      sellerName: req.user.fullName
     });
     
-    console.log(`✅ New service added: "${service.title}" by ${req.user.name}`);
+    console.log(`✅ New service added: "${service.title}" by ${req.user.fullName}`);
     
     res.status(201).json({
       success: true,
@@ -602,12 +628,12 @@ app.post('/api/products', authenticateToken, async (req, res) => {
         category,
         image: image || 'https://via.placeholder.com/600x400?text=صورة+المنتج',
         sellerId: req.user.id,
-        sellerName: req.user.name
+        sellerName: req.user.fullName
     });
     
     // Increment stats logic could go here, or be just a calculation on retrieval
     
-    console.log(`✅ New product added: ${product.title} by ${req.user.name}`);
+    console.log(`✅ New product added: ${product.title} by ${req.user.fullName}`);
     
     res.status(201).json({
       success: true,
@@ -694,9 +720,32 @@ app.get('/api/my-products', authenticateToken, async (req, res) => {
     }
 });
 
-// ============ ORDERS ROUTES ============
+// ============ ORDERS ROUTES (NEW - via Controller) ============
 
-// Create new order (buyer)
+// Mount order routes with authentication
+app.use('/api/orders', authenticateToken, orderRoutes);
+
+// ============ DISPUTES ROUTES (NEW - via Controller) ============
+
+// Mount dispute routes with authentication
+app.use('/api/disputes', authenticateToken, disputeRoutes);
+
+// ============ CHATS ROUTES (NEW - via Controller) ============
+
+// Mount chat routes with authentication
+app.use('/api/chats', authenticateToken, chatRoutes);
+
+// ============ REVIEWS ROUTES (NEW - via Controller) ============
+
+// Mount review routes (auth applied per-route, not globally)
+app.use('/api/reviews', reviewRoutes);
+
+// ============ LEGACY ORDERS ROUTES (DEPRECATED - DO NOT USE) ============
+// NOTE: The routes below are LEGACY and will be removed after migration verification.
+// The new routes above via OrderController now handle all order operations.
+
+/*
+// Create new order (buyer) - DEPRECATED
 app.post('/api/orders', authenticateToken, async (req, res) => {
   try {
     const { serviceId, buyerRequirements } = req.body;
@@ -741,7 +790,7 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
         image: service.image
       },
       buyerId: req.user.id,
-      buyerName: req.user.name,
+      buyerName: req.user.fullName,
       sellerId: service.sellerId,
       sellerName: service.sellerName,
       buyerRequirements: buyerRequirements || '',
@@ -1045,6 +1094,8 @@ app.put('/api/orders/:id/revision', authenticateToken, async (req, res) => {
   }
 });
 
+// END LEGACY ORDERS ROUTES */
+
 // ============ REVIEWS ROUTES ============
 
 // Submit review (buyer, after order completion)
@@ -1087,7 +1138,7 @@ app.post('/api/reviews', authenticateToken, async (req, res) => {
       orderId: order._id,
       serviceId: order.serviceId,
       reviewerId: req.user.id,
-      reviewerName: req.user.name,
+      reviewerName: req.user.fullName,
       sellerId: order.sellerId,
       rating: parseInt(rating),
       comment: comment || ''
@@ -1148,19 +1199,20 @@ app.get('/api/reviews/seller/:sellerId', async (req, res) => {
 // Get platform stats
 app.get('/api/stats', async (req, res) => {
     try {
-        const totalUsers = await User.countDocuments();
+        const totalUsers = await User.countDocuments({ isActive: true });
         const activeProducts = await Product.countDocuments({ status: 'active' });
+        const activeServices = await Service.countDocuments({ status: 'active' });
         
-        // Calculate total sales from Users
-        const users = await User.find({}, 'sales');
-        const totalSales = users.reduce((sum, u) => sum + (u.sales || 0), 0);
+        // Calculate total completed orders from Order model (derived, not stored on User)
+        const completedOrders = await Order.countDocuments({ status: 'completed' });
         
         res.json({
             success: true,
             stats: {
                 totalUsers,
                 totalProducts: activeProducts,
-                totalSales
+                totalServices: activeServices,
+                totalCompletedOrders: completedOrders
             }
         });
     } catch (error) {
@@ -1168,31 +1220,55 @@ app.get('/api/stats', async (req, res) => {
     }
 });
 
-// Get user stats
+// Get user stats (seller dashboard)
 app.get('/api/my-stats', authenticateToken, async (req, res) => {
     try {
+        // Get services (new model) and products (legacy)
+        const myServices = await Service.find({ sellerId: req.user.id, status: { $ne: 'deleted' } });
         const myProducts = await Product.find({ sellerId: req.user.id });
+        const activeServices = myServices.filter(s => s.status === 'active').length;
         const activeProducts = myProducts.filter(p => p.status === 'active').length;
+        
+        // Calculate sales from completed orders (derived, not stored on User)
+        const completedOrders = await Order.countDocuments({ 
+            sellerId: req.user.id, 
+            status: 'completed' 
+        });
+        
+        // Calculate average rating from reviews (derived, not stored on User)
+        const reviews = await Review.find({ sellerId: req.user.id });
+        const avgRating = reviews.length > 0 
+            ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length 
+            : null;  // null means no reviews yet
         
         res.json({
             success: true,
             stats: {
-                totalProducts: myProducts.length,
-                activeProducts,
-                totalSales: req.user.sales || 0,
-                rating: req.user.rating || 5.0
+                totalServices: myServices.length,
+                activeServices,
+                totalProducts: myProducts.length,  // Legacy
+                activeProducts,  // Legacy
+                completedOrders,
+                averageRating: avgRating,
+                reviewsCount: reviews.length
             }
         });
     } catch (error) {
+        console.error('Get my stats error:', error);
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 });
 
 // ============ PUBLIC USERS ROUTES ============
 
+// Get public list of users (for seller discovery)
 app.get('/api/users', async (req, res) => {
     try {
-        const users = await User.find({}, 'name username avatar specialization rating sales id');
+        // Only return public profile fields, NEVER trust metrics
+        const users = await User.find(
+            { isActive: true },  // Only active users
+            'fullName username avatarUrl bio role'
+        );
         res.json({ success: true, users: users.map(u => u.toObject({ getters: true })) });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Server Error' });

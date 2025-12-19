@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مشرق | تأكيد الطلب</title>
+    <meta name="description" content="تأكيد طلب خدمة على منصة مشرق">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <main class="order-page" id="orderSection">
+        <header class="page-header">
+            <h1>مشرق</h1>
+            <p>تأكيد الطلب</p>
+            <button id="logoutBtn" class="logout-btn">تسجيل الخروج</button>
+        </header>
+        
+        <div id="loadingState" class="loading-state">
+            جاري تحميل بيانات الخدمة...
+        </div>
+        
+        <div id="errorState" class="error-state" hidden>
+            <p id="errorText"></p>
+            <button onclick="backToServices()">العودة للخدمات</button>
+        </div>
+        
+        <div id="serviceInfo" class="order-card" hidden>
+            <h2>تفاصيل الطلب</h2>
+            
+            <div class="order-details">
+                <div class="detail-row">
+                    <span class="detail-label">الخدمة:</span>
+                    <span class="detail-value" id="serviceTitle"></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">البائع:</span>
+                    <span class="detail-value" id="serviceSeller"></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">السعر:</span>
+                    <span class="detail-value price" id="servicePrice"></span>
+                </div>
+            </div>
+            
+            <div class="warning-box">
+                ⚠️ بعد تأكيد الطلب لا يمكن التراجع إلا في حالة الطلب النشط
+            </div>
+            
+            <div class="order-actions">
+                <button id="confirmBtn" class="confirm-btn">تأكيد الطلب</button>
+                <button onclick="backToServices()" class="cancel-btn">إلغاء</button>
+            </div>
+        </div>
+        
+        <div id="successState" class="success-card" hidden>
+            <div class="success-icon">✓</div>
+            <h2>تم إنشاء الطلب بنجاح!</h2>
+            <p>سيتواصل معك البائع قريباً</p>
+            <button onclick="backToServices()" class="back-btn">العودة للخدمات</button>
+        </div>
+    </main>
+    
+    <script src="main.js"></script>
+</body>
+</html>

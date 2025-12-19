@@ -1,140 +1,216 @@
 /* ========================================
    Mashriq (مشرق) - Review Model
-   Service Reviews & Ratings
+   ========================================
+   
+   PURPOSE:
+   Represents a buyer's feedback on a COMPLETED order.
+   Reviews are public but cannot be edited or deleted.
+   Reviews contribute to seller reputation internally
+   (via TrustService, not publicly displayed as scores).
+   
+   CONSTITUTION RULES:
+   - Reviews are IMMUTABLE (cannot be edited or deleted once created)
+   - Reviews are tied to COMPLETED orders only
+   - Only the buyer can submit a review
+   - Each order can have at most one review
+   - Rating and review data contribute to internal trust metrics
+   
+   IMMUTABLE FIELDS:
+   - ALL FIELDS ARE IMMUTABLE
+   - Reviews cannot be edited or deleted once created
+   
+   WRITE PERMISSIONS:
+   - ReviewService: Create only
+   
+   NO UPDATES OR DELETES ALLOWED BY ANY SERVICE.
+   
+   READ PERMISSIONS:
+   - ReviewService: All fields
+   - ServiceService: All fields (to display on service page)
+   - TrustService: rating, sellerId (to update trust metrics)
+   
+   CRITICAL INVARIANTS:
+   1. A review can ONLY be created for an order in COMPLETED status
+   2. Only the BUYER can create a review (reviewerId must be order's buyerId)
+   3. Each order can have AT MOST ONE review
+   4. rating must be between 1 and 5 inclusive
+   5. Reviews are NEVER deleted (admin can hide but not destroy)
+   6. sellerId must match order's sellerId
+   
    ======================================== */
 
 const mongoose = require('mongoose');
 
+// ============================================================
+// REVIEW SCHEMA
+// ============================================================
 const reviewSchema = new mongoose.Schema({
-    // === Order Reference (One review per completed order) ===
+    
+    // ============================================================
+    // REFERENCES
+    // ============================================================
+    
+    /**
+     * Reference to the completed Order being reviewed.
+     * UNIQUE - each order can have at most one review.
+     * IMMUTABLE.
+     */
     orderId: {
-        type: mongoose.Schema.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: 'Order',
         required: [true, 'التقييم يجب أن يكون مرتبطاً بطلب'],
-        unique: true  // Ensures one review per order
+        unique: true,
+        immutable: true
     },
     
-    // === Service Reference ===
-    serviceId: {
-        type: mongoose.Schema.ObjectId,
-        ref: 'Service',
-        required: [true, 'التقييم يجب أن يكون مرتبطاً بخدمة']
-    },
-    
-    // === Reviewer (Buyer) ===
+    /**
+     * Reference to the buyer User who wrote the review.
+     * MUST be the order's buyerId.
+     * IMMUTABLE.
+     */
     reviewerId: {
-        type: mongoose.Schema.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        required: [true, 'التقييم يجب أن يكون مرتبطاً بمشتري']
-    },
-    reviewerName: {
-        type: String,
-        required: true
+        required: [true, 'التقييم يجب أن يكون مرتبطاً بمشتري'],
+        immutable: true
     },
     
-    // === Seller being reviewed ===
+    /**
+     * Reference to the seller User being reviewed.
+     * MUST match order's sellerId.
+     * Used for aggregating seller ratings.
+     * IMMUTABLE.
+     */
     sellerId: {
-        type: mongoose.Schema.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        required: [true, 'التقييم يجب أن يكون مرتبطاً ببائع']
+        required: [true, 'التقييم يجب أن يكون مرتبطاً ببائع'],
+        immutable: true
     },
     
-    // === Rating ===
+    // ============================================================
+    // REVIEW CONTENT
+    // ============================================================
+    
+    /**
+     * Numeric rating (1-5 stars).
+     * IMMUTABLE.
+     */
     rating: {
         type: Number,
-        required: [true, 'يرجى تحديد التقييم'],
+        required: [true, 'التقييم مطلوب'],
         min: [1, 'التقييم يجب أن يكون 1 على الأقل'],
-        max: [5, 'التقييم يجب أن يكون 5 كحد أقصى']
+        max: [5, 'التقييم يجب أن يكون 5 كحد أقصى'],
+        immutable: true
     },
     
-    // === Review Content ===
+    /**
+     * Text review content.
+     * Optional but encouraged.
+     * IMMUTABLE.
+     */
     comment: {
         type: String,
-        maxlength: [1000, 'التعليق يجب أن يكون أقل من 1000 حرف'],
-        default: ''
+        default: '',
+        maxlength: [2000, 'التعليق يجب أن يكون أقل من 2000 حرف'],
+        immutable: true
     },
     
-    // === Seller Response (Optional) ===
-    sellerResponse: {
-        type: String,
-        maxlength: [500, 'الرد يجب أن يكون أقل من 500 حرف']
-    },
-    sellerRespondedAt: {
-        type: Date
-    },
+    // ============================================================
+    // TIMESTAMP
+    // ============================================================
     
-    // === Timestamps ===
+    /**
+     * Review creation timestamp.
+     * IMMUTABLE - set once at creation.
+     */
     createdAt: {
         type: Date,
-        default: Date.now
+        default: Date.now,
+        immutable: true
     }
+    
 }, {
+    // Enable virtuals in JSON/Object conversion
     toJSON: { virtuals: true },
     toObject: { virtuals: true }
 });
 
-// === INDEXES ===
-reviewSchema.index({ serviceId: 1 });
-reviewSchema.index({ sellerId: 1 });
-reviewSchema.index({ reviewerId: 1 });
+// ============================================================
+// INDEXES
+// Optimize database queries for common access patterns.
+// ============================================================
+
+// Order lookup (check if order has review)
 reviewSchema.index({ orderId: 1 }, { unique: true });
+
+// Seller's reviews (for profile page and rating calculation)
+reviewSchema.index({ sellerId: 1, createdAt: -1 });
+
+// Reviewer's reviews (for user's review history)
+reviewSchema.index({ reviewerId: 1 });
+
+// Rating distribution analysis
+reviewSchema.index({ sellerId: 1, rating: 1 });
+
+// Chronological listing
 reviewSchema.index({ createdAt: -1 });
 
-// === STATIC: Calculate average rating for a service ===
-reviewSchema.statics.calculateServiceRating = async function(serviceId) {
-    const result = await this.aggregate([
-        { $match: { serviceId: new mongoose.Types.ObjectId(serviceId) } },
-        {
-            $group: {
-                _id: '$serviceId',
-                averageRating: { $avg: '$rating' },
-                reviewsCount: { $sum: 1 }
-            }
-        }
-    ]);
-    
-    if (result.length > 0) {
-        await mongoose.model('Service').findByIdAndUpdate(serviceId, {
-            rating: Math.round(result[0].averageRating * 10) / 10,
-            reviewsCount: result[0].reviewsCount
-        });
-    }
-    
-    return result[0] || { averageRating: 0, reviewsCount: 0 };
-};
+// ============================================================
+// VIRTUALS
+// Computed properties from relationships.
+// ============================================================
 
-// === STATIC: Calculate average rating for a seller ===
-reviewSchema.statics.calculateSellerRating = async function(sellerId) {
-    const result = await this.aggregate([
-        { $match: { sellerId: new mongoose.Types.ObjectId(sellerId) } },
-        {
-            $group: {
-                _id: '$sellerId',
-                averageRating: { $avg: '$rating' },
-                totalReviews: { $sum: 1 }
-            }
-        }
-    ]);
-    
-    if (result.length > 0) {
-        await mongoose.model('User').findByIdAndUpdate(sellerId, {
-            rating: Math.round(result[0].averageRating * 10) / 10
-        });
-    }
-    
-    return result[0] || { averageRating: 0, totalReviews: 0 };
-};
-
-// === POST-SAVE: Update ratings ===
-reviewSchema.post('save', async function() {
-    await this.constructor.calculateServiceRating(this.serviceId);
-    await this.constructor.calculateSellerRating(this.sellerId);
+/**
+ * Virtual: Related order.
+ * Populated from Order model when needed.
+ */
+reviewSchema.virtual('order', {
+    ref: 'Order',
+    localField: 'orderId',
+    foreignField: '_id',
+    justOne: true
 });
 
-// === POST-REMOVE: Recalculate ratings ===
-reviewSchema.post('remove', async function() {
-    await this.constructor.calculateServiceRating(this.serviceId);
-    await this.constructor.calculateSellerRating(this.sellerId);
+/**
+ * Virtual: Reviewer's profile.
+ * Populated from User model when needed.
+ */
+reviewSchema.virtual('reviewer', {
+    ref: 'User',
+    localField: 'reviewerId',
+    foreignField: '_id',
+    justOne: true
 });
 
-module.exports = mongoose.model('Review', reviewSchema);
+/**
+ * Virtual: Seller's profile.
+ * Populated from User model when needed.
+ */
+reviewSchema.virtual('seller', {
+    ref: 'User',
+    localField: 'sellerId',
+    foreignField: '_id',
+    justOne: true
+});
+
+// ============================================================
+// CRITICAL INVARIANTS (Documented for reference)
+// These are NOT enforced by the model - they are enforced by SERVICES.
+// ============================================================
+/*
+ * 1. A review can ONLY be created for an order in COMPLETED status
+ * 2. Only the BUYER can create a review (reviewerId must be order's buyerId)
+ * 3. Each order can have AT MOST ONE review
+ * 4. rating must be between 1 and 5 inclusive
+ * 5. Reviews are NEVER deleted (admin can hide but not destroy)
+ * 6. sellerId must match order's sellerId
+ */
+
+// ============================================================
+// EXPORT
+// ============================================================
+
+const Review = mongoose.model('Review', reviewSchema);
+
+module.exports = Review;
