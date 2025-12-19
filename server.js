@@ -1312,7 +1312,8 @@ app.use((req, res) => {
   if (req.path.startsWith('/api/')) {
     return res.status(404).json({ success: false, message: 'الخدمة غير موجودة' });
   }
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  // Redirect to V2 frontend
+  res.sendFile(path.join(__dirname, 'public', 'v2', 'index.html'));
 });
 
 // ============ START SERVER ============
