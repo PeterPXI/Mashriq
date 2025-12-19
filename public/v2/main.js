@@ -25,19 +25,50 @@ function getUser() {
 }
 
 /**
- * Check if user is authenticated, redirect if not
+ * Check if user is authenticated
+ */
+function isAuthenticated() {
+    return !!getToken();
+}
+
+/**
+ * Require authentication - redirect to login if not authenticated
+ * Use on protected pages (services, order)
  */
 function requireAuth() {
-    const token = getToken();
-    if (!token) {
-        window.location.href = 'index.html';
+    if (!isAuthenticated()) {
+        window.location.href = 'login.html';
         return false;
     }
     return true;
 }
 
 /**
- * Logout user
+ * Redirect if already authenticated - for auth pages (login, register)
+ * Prevents logged-in users from accessing auth pages
+ */
+function redirectIfAuthenticated() {
+    if (isAuthenticated()) {
+        window.location.href = 'services.html';
+        return true;
+    }
+    return false;
+}
+
+/**
+ * Redirect authenticated users from landing page
+ * Use on index.html (landing page)
+ */
+function redirectAuthenticatedFromLanding() {
+    if (isAuthenticated()) {
+        window.location.href = 'services.html';
+        return true;
+    }
+    return false;
+}
+
+/**
+ * Logout user - clear storage and redirect to landing
  */
 function logout() {
     localStorage.removeItem('token');
@@ -86,16 +117,13 @@ function initLoginPage() {
     const loginForm = document.getElementById('loginForm');
     if (!loginForm) return;
     
+    // Redirect if already logged in
+    if (redirectIfAuthenticated()) return;
+    
     const emailInput = document.getElementById('email');
     const passwordInput = document.getElementById('password');
     const errorMessage = document.getElementById('errorMessage');
     const submitBtn = document.getElementById('submitBtn');
-    
-    // Redirect if already logged in
-    if (getToken()) {
-        window.location.href = 'services.html';
-        return;
-    }
     
     function showError(message) {
         errorMessage.textContent = message;
@@ -333,18 +361,15 @@ function initRegisterPage() {
     const registerForm = document.getElementById('registerForm');
     if (!registerForm) return;
     
+    // Redirect if already logged in
+    if (redirectIfAuthenticated()) return;
+    
     const fullNameInput = document.getElementById('fullName');
     const usernameInput = document.getElementById('username');
     const emailInput = document.getElementById('email');
     const passwordInput = document.getElementById('password');
     const errorMessage = document.getElementById('errorMessage');
     const submitBtn = document.getElementById('submitBtn');
-    
-    // Redirect if already logged in
-    if (getToken()) {
-        window.location.href = 'services.html';
-        return;
-    }
     
     function showError(message) {
         errorMessage.textContent = message;
@@ -427,12 +452,31 @@ function escapeHtml(text) {
 }
 
 // ============================================================
+// LANDING PAGE
+// ============================================================
+
+function initLandingPage() {
+    // Only run on landing page (check for hero section)
+    const heroSection = document.querySelector('.hero');
+    if (!heroSection) return;
+    
+    // Redirect authenticated users to services
+    redirectAuthenticatedFromLanding();
+}
+
+// ============================================================
 // INITIALIZATION
 // ============================================================
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Landing page
+    initLandingPage();
+    
+    // Auth pages
     initLoginPage();
     initRegisterPage();
+    
+    // Protected pages
     initServicesPage();
     initOrderPage();
 });
